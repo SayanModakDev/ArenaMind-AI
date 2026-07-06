@@ -274,6 +274,12 @@ async def serve_frontend():
     return FileResponse("static/index.html")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve the favicon."""
+    return FileResponse("static/favicon.png")
+
+
 # ═════════════════════════════════════════════════════════════════════════
 #  MAIN EXECUTION
 # ═════════════════════════════════════════════════════════════════════════
