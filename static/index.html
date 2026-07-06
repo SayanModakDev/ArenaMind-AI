@@ -2,7 +2,9 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ArenaMind AI — Venue Operations Intelligence</title>
     <meta name="description" content="ArenaMind-AI: Real-time operational intelligence engine for FIFA World Cup 2026 stadium operations.">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -75,6 +77,17 @@
         ::-webkit-scrollbar-track { background: #111827; }
         ::-webkit-scrollbar-thumb { background: #22a872; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #45c38d; }
+
+        /* ── Mobile-first: safe area & touch ────────────────────── */
+        body {
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, select, textarea, a {
+            touch-action: manipulation;
+        }
 
         /* ── Scanline overlay for terminal aesthetic ─────────────── */
         .scanlines::after {
@@ -286,8 +299,9 @@
                         <!-- Execute Button -->
                         <button
                             id="executeBtn"
+                            type="button"
                             onclick="executeQuery()"
-                            class="focus-ring group relative w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-arena-600 to-arena-700 hover:from-arena-500 hover:to-arena-600 text-white font-semibold text-sm tracking-wide shadow-lg shadow-arena-900/40 hover:shadow-arena-800/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 overflow-hidden"
+                            class="focus-ring group relative w-full flex items-center justify-center gap-2.5 px-6 py-3.5 sm:py-3.5 min-h-[48px] rounded-xl bg-gradient-to-r from-arena-600 to-arena-700 hover:from-arena-500 hover:to-arena-600 text-white font-semibold text-sm tracking-wide shadow-lg shadow-arena-900/40 hover:shadow-arena-800/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 overflow-hidden"
                         >
                             <!-- Scan effect -->
                             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -335,7 +349,7 @@
 
             <!-- ─── RIGHT COLUMN: Output ───────────────────────────── -->
             <div class="lg:col-span-7">
-                <section class="scanlines relative rounded-2xl bg-gray-900/70 border border-gray-800/60 overflow-hidden shadow-2xl shadow-black/20 min-h-[500px] lg:min-h-[640px] flex flex-col">
+                <section class="scanlines relative rounded-2xl bg-gray-900/70 border border-gray-800/60 overflow-hidden shadow-2xl shadow-black/20 min-h-[320px] sm:min-h-[420px] lg:min-h-[640px] flex flex-col">
                     <!-- Terminal Header -->
                     <div class="relative z-10 px-5 sm:px-6 py-4 border-b border-gray-800/60 flex items-center justify-between">
                         <div class="flex items-center gap-3">
@@ -528,7 +542,10 @@
         }
 
         // ── Core: Execute Query ────────────────────────────────────
-        async function executeQuery() {
+        async function executeQuery(event) {
+            // Prevent any form submission / page reload
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+
             const query = queryInput.value.trim();
 
             // Client-side validation
