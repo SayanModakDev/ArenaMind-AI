@@ -152,6 +152,25 @@ Then open [http://localhost:8080](http://localhost:8080) in your browser.
 pytest tests/test_core.py -v
 ```
 
+### Docker & Cloud Run Deployment
+
+The repository includes a highly-optimised `Dockerfile` ready for Google Cloud Run deployment. It leverages a lightweight `python:3.10-slim` base image and multi-layer dependency caching.
+
+```bash
+# 1. Build the image locally
+docker build -t arenamind-ai .
+
+# 2. Run the container locally
+docker run -p 8080:8080 -e GEMINI_API_KEY="your_api_key_here" arenamind-ai
+
+# 3. Deploy to Google Cloud Run
+gcloud run deploy arenamind-ai \
+  --source . \
+  --port 8080 \
+  --set-env-vars="GEMINI_API_KEY=your_api_key_here" \
+  --allow-unauthenticated
+```
+
 ---
 
 ## 📁 Project Structure
@@ -171,6 +190,7 @@ ArenaMind-AI/
 │   └── test_core.py            # Pytest suite: health, validation, injection handling
 ├── main.py                     # FastAPI application entry point
 ├── requirements.txt            # Pinned dependencies
+├── Dockerfile                  # Lightweight container config for Cloud Run
 ├── .env                        # GEMINI_API_KEY (git-ignored)
 ├── .gitignore
 └── README.md
