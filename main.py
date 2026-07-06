@@ -12,12 +12,14 @@ Endpoints:
 
 import logging
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from agents.operational_brain import OperationalBrain
@@ -44,6 +46,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# ── Static Files ────────────────────────────────────────────────────────
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # ── Brain Instantiation (fail-safe) ────────────────────────────────────
 # Wrapped in a try/except so the server can still boot in CI/CD
@@ -258,6 +264,17 @@ async def operations_stream(request: QueryRequest) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  ROOT — Serve Frontend
+# ═════════════════════════════════════════════════════════════════════════
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def serve_frontend() -> HTMLResponse:
+    """Serve the ArenaMind-AI frontend UI."""
+    index_path = STATIC_DIR / "index.html"
+    return HTMLResponse(content=index_path.read_text(encoding="utf-8"), status_code=200)
 
 
 # ═════════════════════════════════════════════════════════════════════════
