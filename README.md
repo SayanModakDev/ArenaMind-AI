@@ -183,7 +183,7 @@ ArenaMind-AI/
 │   └── operational_brain.py    # Gemini agent: sanitisation, telemetry, generation
 ├── prompts/
 │   ├── __init__.py
-│   └── templates.py            # STADIUM_SYSTEM_INSTRUCTION (200+ line system prompt)
+│   └── templates.py            # STADIUM_SYSTEM_INSTRUCTION (Optimized, low-latency system prompt)
 ├── static/
 │   ├── index.html              # Mobile-first command terminal UI (Tailwind CSS)
 │   ├── logo.png                # Custom AI-generated header logo
@@ -192,6 +192,7 @@ ArenaMind-AI/
 │   ├── __init__.py
 │   └── test_core.py            # Pytest suite: health, validation, injection handling
 ├── main.py                     # FastAPI application entry point
+├── logo.py                     # Python utility script to process transparent PNG assets
 ├── requirements.txt            # Pinned dependencies
 ├── Dockerfile                  # Lightweight container config for Cloud Run
 ├── .env                        # GEMINI_API_KEY (git-ignored)
@@ -251,6 +252,7 @@ The following section maps each evaluation criterion to the specific implementat
 | `POST` | `/api/v1/operations/query` | Synchronous AI query with stadium telemetry context |
 | `POST` | `/api/v1/operations/stream` | SSE streaming AI query (optimised TTFT) |
 | `GET` | `/` | Serve the frontend UI |
+| `GET` | `/favicon.ico` | Serve the site favicon directly for browser compatibility |
 | `GET` | `/docs` | Interactive Swagger/OpenAPI documentation |
 
 ### Example Request
