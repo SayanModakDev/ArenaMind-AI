@@ -98,6 +98,7 @@ The Gemini agent performs **automatic language detection** and responds entirely
 | **Vanilla JS + Tailwind (zero-build)** | No webpack, no node_modules, no build step. A single HTML file that loads instantly on any device. Maximum efficiency for hackathon graders and stadium Wi-Fi |
 | **SSE Streaming** | Server-Sent Events optimise Time-to-First-Token (TTFT) for responsive mobile and kiosk interfaces |
 | **System Instruction Architecture** | All operational logic (phase compliance, accessibility, multilingual, security) is encoded in a structured system prompt — not hardcoded in application logic. This makes the agent's behaviour auditable, versioned, and modifiable without code changes |
+| **Premium UI & Branding** | Custom AI-generated logo and favicon natively integrated via `static/` mount with Tailwind CSS, ensuring a highly polished, immersive "Command Terminal" aesthetic that feels production-ready. |
 
 ---
 
@@ -184,7 +185,9 @@ ArenaMind-AI/
 │   ├── __init__.py
 │   └── templates.py            # STADIUM_SYSTEM_INSTRUCTION (200+ line system prompt)
 ├── static/
-│   └── index.html              # Mobile-first command terminal UI (Tailwind CSS)
+│   ├── index.html              # Mobile-first command terminal UI (Tailwind CSS)
+│   ├── logo.png                # Custom AI-generated header logo
+│   └── favicon.png             # Custom AI-generated favicon
 ├── tests/
 │   ├── __init__.py
 │   └── test_core.py            # Pytest suite: health, validation, injection handling
