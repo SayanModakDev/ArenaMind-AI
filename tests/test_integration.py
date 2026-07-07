@@ -6,7 +6,10 @@ from main import app
 
 client = TestClient(app)
 
-@pytest.mark.skipif(not os.environ.get("GEMINI_API_KEY"), reason="Missing GEMINI_API_KEY")
+@pytest.mark.skipif(
+    not os.environ.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY") == "mock_key_for_testing", 
+    reason="Missing real GEMINI_API_KEY"
+)
 def test_accessibility_routing_integration():
     """Live E2E integration test against the real Gemini model."""
     response = client.post(
