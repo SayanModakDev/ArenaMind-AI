@@ -87,3 +87,12 @@ button, select, textarea, a {
 select, button, textarea {
     transition: all 0.2s ease;
 }
+
+/* ── High Contrast Mode ──────────────────────────────────── */
+.high-contrast-mode {
+    background-color: #000 !important;
+    color: #fff !important;
+}
+.high-contrast-mode * {
+    border-color: #fff !important;
+}

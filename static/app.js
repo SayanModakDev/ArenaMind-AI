@@ -1,4 +1,5 @@
 // ── DOM References ─────────────────────────────────────────
+const contrastToggle   = document.getElementById('contrastToggle');
 const queryInput       = document.getElementById('queryInput');
 const matchPhaseSelect = document.getElementById('matchPhase');
 const accessSelect     = document.getElementById('accessibility');
@@ -18,6 +19,11 @@ const responseText     = document.getElementById('responseText');
 const echoText         = document.getElementById('echoText');
 const responseTimestamp = document.getElementById('responseTimestamp');
 const errorText        = document.getElementById('errorText');
+
+// ── UI Toggles ─────────────────────────────────────────────
+contrastToggle.addEventListener('click', () => {
+    document.body.classList.toggle('high-contrast-mode');
+});
 
 // ── Character Counter ──────────────────────────────────────
 queryInput.addEventListener('input', () => {
