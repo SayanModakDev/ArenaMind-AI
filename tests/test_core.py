@@ -37,6 +37,10 @@ with patch("google.generativeai.configure"):
         mock_response.text = "This is a mock AI response for testing."
         mock_model_instance.generate_content.return_value = mock_response
 
+        async def mock_async_call(*args, **kwargs):
+            return mock_response
+        mock_model_instance.generate_content_async = mock_async_call
+
         MockModel.return_value = mock_model_instance
 
         from main import app  # noqa: E402

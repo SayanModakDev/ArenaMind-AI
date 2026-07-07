@@ -9,10 +9,13 @@ for live FIFA World Cup 2026 venue operations.
 
 import os
 import re
+import json
+import hashlib
 from typing import Any, Dict, Generator, Optional
 
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from async_lru import alru_cache
 
 from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
 
@@ -214,17 +217,31 @@ class OperationalBrain:
 
     # ── Public API ──────────────────────────────────────────────────────
 
-    def generate_response(
+    @alru_cache(maxsize=100)
+    async def _cached_gemini_call(self, hashed_key: str, prompt: str) -> str:
+        """Internal cached method for the Gemini generation."""
+        response = await self._model.generate_content_async(
+            prompt,
+            stream=False,
+        )
+        if not response.parts:
+            return (
+                "I'm sorry, I wasn't able to generate a response for "
+                "that query. Please try rephrasing, or contact venue "
+                "staff for assistance."
+            )
+        return response.text
+
+    async def generate_response(
         self,
         query: str,
         context_dict: Dict[str, Any],
     ) -> str:
         """
-        Generate a complete (blocking) response from the Gemini model.
+        Generate a complete (blocking/cached) response from the Gemini model.
 
-        This method waits for the full response before returning and is
-        suitable for server-side processing, logging pipelines, or any
-        consumer that does not benefit from incremental delivery.
+        This method awaits the full response and uses async_lru caching 
+        to return instantly for identical queries.
 
         Args:
             query: The fan's natural-language question or request.
@@ -232,29 +249,13 @@ class OperationalBrain:
 
         Returns:
             The model's full text response as a single string.
-
-        Raises:
-            google.generativeai.types.BlockedPromptException:
-                If the safety filters block the prompt.
-            google.generativeai.types.StopCandidateException:
-                If the safety filters block the generated response.
         """
         prompt: str = self._build_prompt(query, context_dict)
 
-        response = self._model.generate_content(
-            prompt,
-            stream=False,
-        )
+        hash_input = json.dumps({"query": query, "context": context_dict}, sort_keys=True)
+        hashed_key = hashlib.md5(hash_input.encode("utf-8")).hexdigest()
 
-        # Gracefully handle cases where the response is blocked or empty.
-        if not response.parts:
-            return (
-                "I'm sorry, I wasn't able to generate a response for "
-                "that query. Please try rephrasing, or contact venue "
-                "staff for assistance."
-            )
-
-        return response.text
+        return await self._cached_gemini_call(hashed_key, prompt)
 
     def generate_stream(
         self,

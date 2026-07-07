@@ -16,10 +16,12 @@ from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from agents.operational_brain import OperationalBrain
 
@@ -48,6 +50,9 @@ app = FastAPI(
 
 # ── Static Files ────────────────────────────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
 # ── Brain Instantiation (fail-safe) ────────────────────────────────────
 # Wrapped in a try/except so the server can still boot in CI/CD
@@ -197,17 +202,18 @@ async def health_check() -> HealthResponse:
     tags=["Operations"],
     summary="Synchronous AI query",
 )
-async def operations_query(request: QueryRequest) -> QueryResponse:
+@limiter.limit("10/minute")
+async def operations_query(request: Request, payload: QueryRequest) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
     the AI agent's full-text response in a single blocking call.
     """
     active_brain = _require_brain()
-    context_dict = _context_to_dict(request.context)
+    context_dict = _context_to_dict(payload.context)
 
     try:
-        answer = active_brain.generate_response(
-            query=request.query,
+        answer = await active_brain.generate_response(
+            query=payload.query,
             context_dict=context_dict,
         )
         return QueryResponse(status="success", response=answer)
