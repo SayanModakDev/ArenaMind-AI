@@ -12,12 +12,14 @@ import re
 import json
 import hashlib
 from typing import Any, Dict, Generator, Optional
+import asyncio
 
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from async_lru import alru_cache
 
 from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
+from exceptions import ModelTimeoutError, ConfigurationError, ArenaMindError
 
 
 class OperationalBrain:
@@ -225,13 +227,17 @@ class OperationalBrain:
 
     # ── Public API ──────────────────────────────────────────────────────
 
-    @alru_cache(maxsize=100)
+    @alru_cache(maxsize=200)
     async def _cached_gemini_call(self, hashed_key: str, prompt: str) -> str:
         """Internal cached method for the Gemini generation."""
-        response = await self._model.generate_content_async(
-            prompt,
-            stream=False,
-        )
+        try:
+            response = await asyncio.wait_for(
+                self._model.generate_content_async(prompt, stream=False),
+                timeout=8.0
+            )
+        except asyncio.TimeoutError as exc:
+            raise ModelTimeoutError(f"LLM generation timed out after 8.0 seconds: {exc}") from exc
+
         if not response.parts:
             return (
                 "I'm sorry, I wasn't able to generate a response for "
