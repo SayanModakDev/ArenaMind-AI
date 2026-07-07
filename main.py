@@ -278,7 +278,7 @@ async def operations_stream(request: QueryRequest, api_key: str = Depends(verify
             yield "data: [DONE]\n\n"
         except Exception as exc:
             logger.error("generate_stream failed: %s", exc, exc_info=True)
-            yield f"data: [ERROR] {exc}\n\n"
+            yield "data: [ERROR] An internal server error occurred during the stream.\n\n"
 
     return StreamingResponse(
         _event_generator(),
