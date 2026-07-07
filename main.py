@@ -16,9 +16,11 @@ from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status, Request
+from fastapi import FastAPI, HTTPException, status, Request, Security, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import APIKeyHeader
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -47,6 +49,25 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+api_key_header = APIKeyHeader(name="X-Stadium-Auth")
+
+def verify_api_key(api_key: str = Security(api_key_header)):
+    """Simple deterministic hardcoded token validation."""
+    if api_key != "wc2026-ops-token":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing X-Stadium-Auth token",
+        )
+    return api_key
 
 # ── Static Files ────────────────────────────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -203,7 +224,7 @@ async def health_check() -> HealthResponse:
     summary="Synchronous AI query",
 )
 @limiter.limit("10/minute")
-async def operations_query(request: Request, payload: QueryRequest) -> QueryResponse:
+async def operations_query(request: Request, payload: QueryRequest, api_key: str = Depends(verify_api_key)) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
     the AI agent's full-text response in a single blocking call.
@@ -232,7 +253,7 @@ async def operations_query(request: Request, payload: QueryRequest) -> QueryResp
     tags=["Operations"],
     summary="Streaming AI query (SSE)",
 )
-async def operations_stream(request: QueryRequest) -> StreamingResponse:
+async def operations_stream(request: QueryRequest, api_key: str = Depends(verify_api_key)) -> StreamingResponse:
     """
     Accepts a fan query and streams the AI agent's response as
     Server-Sent Events (SSE), optimising Time-to-First-Token for

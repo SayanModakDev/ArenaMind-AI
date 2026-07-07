@@ -215,6 +215,14 @@ class OperationalBrain:
             f"{safe_query}\n"
         )
 
+    def _enforce_accessibility_policy(self, response_text: str, context: dict) -> str:
+        """Deterministic check for ADA route enforcement."""
+        if context.get("accessibility_required"):
+            text_lower = response_text.lower()
+            if "stairs" in text_lower and "elevator" not in text_lower and "ramp" not in text_lower:
+                return response_text + "\n\n[SYSTEM OVERRIDE]: Accessible route strictly required. Please use the nearest elevator bank."
+        return response_text
+
     # ── Public API ──────────────────────────────────────────────────────
 
     @alru_cache(maxsize=100)
@@ -255,7 +263,8 @@ class OperationalBrain:
         hash_input = json.dumps({"query": query, "context": context_dict}, sort_keys=True)
         hashed_key = hashlib.md5(hash_input.encode("utf-8")).hexdigest()
 
-        return await self._cached_gemini_call(hashed_key, prompt)
+        raw_response = await self._cached_gemini_call(hashed_key, prompt)
+        return self._enforce_accessibility_policy(raw_response, context_dict)
 
     def generate_stream(
         self,
@@ -289,6 +298,13 @@ class OperationalBrain:
             stream=True,
         )
 
+        full_text = ""
         for chunk in response_stream:
             if chunk.parts:
                 yield chunk.text
+                full_text += chunk.text
+
+        # Post-validation on the complete stream
+        override_text = self._enforce_accessibility_policy(full_text, context_dict)
+        if override_text != full_text:
+            yield "\n\n[SYSTEM OVERRIDE]: Accessible route strictly required. Please use the nearest elevator bank."
