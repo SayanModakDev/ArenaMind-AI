@@ -1,0 +1,13 @@
+name: Repository No-op Workflow
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: No-op
+        run: echo "Workflow placeholder for Actions analysis"
