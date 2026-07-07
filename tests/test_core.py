@@ -135,7 +135,7 @@ class TestInputValidation:
             },
         }
 
-        response = client.post("/api/v1/operations/query", json=payload)
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": "wc2026-ops-token"})
 
         assert response.status_code == 422, (
             f"Expected 422 for empty query, got {response.status_code}"
@@ -151,7 +151,7 @@ class TestInputValidation:
             "context": {},
         }
 
-        response = client.post("/api/v1/operations/query", json=payload)
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": "wc2026-ops-token"})
 
         assert response.status_code == 422, (
             f"Expected 422 for single-char query, got {response.status_code}"
@@ -163,7 +163,7 @@ class TestInputValidation:
         """
         payload = {"context": {}}
 
-        response = client.post("/api/v1/operations/query", json=payload)
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": "wc2026-ops-token"})
 
         assert response.status_code == 422, (
             f"Expected 422 for missing query, got {response.status_code}"
@@ -191,6 +191,7 @@ class TestInjectionHandling:
         response = client.post(
             "/api/v1/operations/query",
             json=injection_payload,
+            headers={"X-Stadium-Auth": "wc2026-ops-token"}
         )
 
         assert response.status_code == 200, (
@@ -218,6 +219,7 @@ class TestValidQuery:
         response = client.post(
             "/api/v1/operations/query",
             json=valid_payload,
+            headers={"X-Stadium-Auth": "wc2026-ops-token"}
         )
 
         assert response.status_code == 200, (
