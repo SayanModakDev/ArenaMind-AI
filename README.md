@@ -222,7 +222,8 @@ The following section maps each evaluation criterion to the specific implementat
 - **API Authentication:** All operational endpoints require a deterministic `X-Stadium-Auth` header token, completely blocking unauthenticated public access.
 - **Container Hardening:** The production Dockerfile strictly enforces non-root execution via `appuser` and `appgroup` ownership, mitigating privilege escalation risks.
 - **Streaming Output Sanitization:** SSE streaming exception handling is explicitly sanitized to prevent internal stack traces or environment metadata from leaking to clients on failure.
-- **Rate Limiting:** The core `/query` endpoint implements a strict `10/minute` rate limit per IP using `slowapi` to prevent abuse.
+- **Rate Limiting:** Both `/query` and `/stream` endpoints implement a strict `15/minute` rate limit per IP using `slowapi` to prevent abuse.
+- **Continuous Security Scanning:** CodeQL advanced scanning is unconditionally enforced on every push and pull request via `.github/workflows/codeql.yml`.
 - **Zero hardcoded secrets:** `GEMINI_API_KEY` is loaded exclusively from `os.environ` via `python-dotenv`. A `ValueError` is raised immediately if it is missing or empty.
 - **Prompt injection defence:** `OperationalBrain._sanitize_input()` applies a compiled regex blocklist of 25+ adversarial patterns before any user input reaches the model.
 - **Enterprise safety settings:** All four Gemini `HarmCategory` filters (harassment, hate speech, sexually explicit, dangerous content) are set to `BLOCK_MEDIUM_AND_ABOVE`.
@@ -236,7 +237,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Fail-safe initialisation:** The server boots even without a valid API key — `GET /health` always returns `200 OK` for CI/CD graders.
 
 ### 🧪 Testing
-- **Automated Pytest suite** (`tests/test_core.py` and `tests/test_integration.py`) covering:
+- **Automated Pytest suite** (`tests/test_core.py`, `tests/test_integration.py`, and `tests/test_security.py`) covering:
   - **Health & Validation:** Empty queries, missing fields, and single-character failures (`422 Unprocessable Entity`).
   - **Authentication Integration:** Asserts endpoints correctly reject requests without `X-Stadium-Auth`.
   - **SSE Streaming Integration:** Validates `content-type: text/event-stream` headers and chunked payload structures using `httpx.AsyncClient`.
@@ -244,7 +245,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Mocked Gemini SDK:** Core tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
 
 ### ♿ Accessibility
-- **ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) enforces barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs are never a primary route.
+- **ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) and a deterministic post-generation guardrail (`_enforce_accessibility`) enforce barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs and escalators are strictly blocked via hardcoded overrides.
 - **Sensory accessibility:** Landmark-based directions for visually impaired users; text-only instructions for hearing-impaired users.
 - **Auto-escalation:** Mobility device mentions (wheelchair, walker, scooter) trigger ADA mode automatically — even without the flag.
 - **Mobile-responsive UI:** The Tailwind CSS frontend is strictly mobile-first (`grid-cols-1 lg:grid-cols-12`), with responsive breakpoints, `viewport-fit=cover` for notched phones, `touch-action: manipulation` for zero tap delay, and 48dp minimum touch targets per Google's accessibility guidelines.
