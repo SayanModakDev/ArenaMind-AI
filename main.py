@@ -223,7 +223,7 @@ async def health_check() -> HealthResponse:
     tags=["Operations"],
     summary="Synchronous AI query",
 )
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 async def operations_query(request: Request, payload: QueryRequest, api_key: str = Depends(verify_api_key)) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
@@ -253,7 +253,8 @@ async def operations_query(request: Request, payload: QueryRequest, api_key: str
     tags=["Operations"],
     summary="Streaming AI query (SSE)",
 )
-async def operations_stream(request: QueryRequest, api_key: str = Depends(verify_api_key)) -> StreamingResponse:
+@limiter.limit("15/minute")
+async def operations_stream(request: Request, payload: QueryRequest, api_key: str = Depends(verify_api_key)) -> StreamingResponse:
     """
     Accepts a fan query and streams the AI agent's response as
     Server-Sent Events (SSE), optimising Time-to-First-Token for
@@ -264,13 +265,13 @@ async def operations_stream(request: QueryRequest, api_key: str = Depends(verify
         data: <text chunk>\\n\\n
     """
     active_brain = _require_brain()
-    context_dict = _context_to_dict(request.context)
+    context_dict = _context_to_dict(payload.context)
 
     def _event_generator():
         """Yield SSE-formatted chunks from the Gemini stream."""
         try:
             for chunk in active_brain.generate_stream(
-                query=request.query,
+                query=payload.query,
                 context_dict=context_dict,
             ):
                 yield f"data: {chunk}\n\n"
