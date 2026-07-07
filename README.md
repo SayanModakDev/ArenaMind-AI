@@ -61,10 +61,10 @@ The Gemini agent performs **automatic language detection** and responds entirely
 ┌─────────────────────────────────────────────────────────────┐
 │                     FastAPI Backend                          │
 │                                                             │
-│  GET  /health               → Liveness probe (CI/CD)        │
-│  POST /api/v1/ops/query     → AI response (Auth Required)   │
-│  POST /api/v1/ops/stream    → SSE response (Auth Required)  │
-│  GET  /                     → Serve frontend UI              │
+│  GET  /health                   → Liveness probe (CI/CD)    │
+│  POST /api/v1/operations/query  → AI response (Auth)        │
+│  POST /api/v1/operations/stream → SSE response (Auth)       │
+│  GET  /                         → Serve frontend UI         │
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │            OperationalBrain (agents/)                  │  │
