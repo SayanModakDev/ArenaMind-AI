@@ -223,7 +223,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Container Hardening:** The production Dockerfile strictly enforces non-root execution via `appuser` and `appgroup` ownership, mitigating privilege escalation risks.
 - **Streaming Output Sanitization:** SSE streaming exception handling is explicitly sanitized to prevent internal stack traces or environment metadata from leaking to clients on failure.
 - **Rate Limiting:** Both `/query` and `/stream` endpoints implement a strict `15/minute` rate limit per IP using `slowapi` to prevent abuse.
-- **Continuous Security Scanning:** CodeQL advanced scanning is unconditionally enforced on every push and pull request via `.github/workflows/codeql.yml`.
+- **Continuous Security Scanning:** CodeQL scanning is enforced through GitHub Code Scanning default setup on every push and pull request.
 - **Zero hardcoded secrets:** `GEMINI_API_KEY` is loaded exclusively from `os.environ` via `python-dotenv`. A `ValueError` is raised immediately if it is missing or empty.
 - **Prompt injection defence:** `OperationalBrain._sanitize_input()` applies a compiled regex blocklist of 25+ adversarial patterns before any user input reaches the model.
 - **Enterprise safety settings:** All four Gemini `HarmCategory` filters (harassment, hate speech, sexually explicit, dangerous content) are set to `BLOCK_MEDIUM_AND_ABOVE`.
