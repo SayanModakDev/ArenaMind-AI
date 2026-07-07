@@ -20,6 +20,7 @@ from async_lru import alru_cache
 
 from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
 from exceptions import ModelTimeoutError, ConfigurationError, ArenaMindError
+from config import settings
 
 
 class OperationalBrain:
@@ -82,10 +83,10 @@ class OperationalBrain:
                 not set or is empty.
         """
         # ── 1. Secure API-Key Loading ───────────────────────────────────
-        api_key: Optional[str] = os.environ.get("GEMINI_API_KEY")
+        api_key: str = settings.GEMINI_API_KEY
 
         if not api_key or not api_key.strip():
-            raise ValueError(
+            raise ConfigurationError(
                 "GEMINI_API_KEY is not set in the environment. "
                 "Export it before starting the service: "
                 "export GEMINI_API_KEY='your-key-here'"
