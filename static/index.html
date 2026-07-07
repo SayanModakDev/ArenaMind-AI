@@ -568,7 +568,10 @@
             try {
                 const response = await fetch('/api/v1/operations/query', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Stadium-Auth': 'wc2026-ops-token'
+                    },
                     body: JSON.stringify(payload),
                 });
 
