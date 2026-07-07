@@ -105,7 +105,7 @@ async function executeQuery(event) {
     setButtonLoading(true);
 
     try {
-        const response = await fetch('/api/v1/operations/query', {
+        const response = await fetch('/api/v1/operations/stream', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -120,15 +120,41 @@ async function executeQuery(event) {
             throw new Error(detail);
         }
 
-        const data = await response.json();
-
-        // Render success
+        // Render success state immediately for streaming
         echoText.textContent = query;
         responseTimestamp.textContent = `· ${new Date().toLocaleTimeString()}`;
-        responseText.textContent = data.response || 'No response received.';
+        responseText.textContent = ''; // Clear text for typing effect
 
         showState('response');
-        setStatus('success', 'Response Received');
+        setStatus('success', 'Receiving Stream...');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const dataStr = line.substring(6);
+                    if (dataStr === '[DONE]') {
+                        break;
+                    }
+                    if (dataStr.startsWith('[ERROR]')) {
+                        responseText.textContent += '\n\n' + dataStr;
+                        setStatus('error', 'Stream Error');
+                        break;
+                    }
+                    responseText.textContent += dataStr;
+                }
+            }
+        }
+
+        setStatus('success', 'Response Completed');
 
     } catch (err) {
         // Render error
