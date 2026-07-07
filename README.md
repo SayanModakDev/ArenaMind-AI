@@ -95,7 +95,7 @@ The Gemini agent performs **automatic language detection** and responds entirely
 |---|---|
 | **Gemini 2.5 Flash** | Lowest latency in the Gemini family — critical for fans expecting sub-second guidance on mobile devices in loud stadiums |
 | **FastAPI (async)** | High-concurrency ASGI framework with native Pydantic validation — ideal for real-time operational APIs |
-| **Vanilla JS + Tailwind (zero-build)** | No webpack, no node_modules, no build step. A single HTML file that loads instantly on any device. Maximum efficiency for hackathon graders and stadium Wi-Fi |
+| **Vanilla JS + Tailwind (zero-build)** | No webpack, no node_modules, no build step. A lightweight static bundle (HTML, CSS, JS) that loads instantly on any device. Maximum efficiency for hackathon graders and stadium Wi-Fi |
 | **SSE Streaming** | Server-Sent Events optimise Time-to-First-Token (TTFT) for responsive mobile and kiosk interfaces |
 | **System Instruction Architecture** | All operational logic (phase compliance, accessibility, multilingual, security) is encoded in a structured system prompt — not hardcoded in application logic. This makes the agent's behaviour auditable, versioned, and modifiable without code changes |
 | **Premium UI & Branding** | Custom AI-generated logo and favicon natively integrated via `static/` mount with Tailwind CSS, ensuring a highly polished, immersive "Command Terminal" aesthetic that feels production-ready. |
@@ -189,7 +189,9 @@ ArenaMind-AI/
 │   ├── __init__.py
 │   └── templates.py            # STADIUM_SYSTEM_INSTRUCTION (Optimized, low-latency system prompt)
 ├── static/
-│   ├── index.html              # Mobile-first command terminal UI (Tailwind CSS)
+│   ├── index.html              # Mobile-first command terminal UI
+│   ├── styles.css              # Custom Tailwind overrides and animations
+│   ├── app.js                  # Vanilla JS application logic and API client
 │   ├── logo.png                # Custom AI-generated header logo
 │   └── favicon.png             # Custom AI-generated favicon
 ├── tests/
