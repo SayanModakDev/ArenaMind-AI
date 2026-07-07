@@ -61,6 +61,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def security_and_audit_middleware(request: Request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info(f"AUDIT | Method: {request.method} | URL: {request.url.path} | IP: {client_ip}")
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 api_key_header = APIKeyHeader(name="X-Stadium-Auth")
 
 def verify_api_key(api_key: str = Security(api_key_header)):
