@@ -214,6 +214,8 @@ The following section maps each evaluation criterion to the specific implementat
 
 ### ✅ Code Quality
 - **Modular architecture:** Cleanly separated concerns — `agents/` (AI logic), `prompts/` (system instructions), `tests/` (validation), `static/` (frontend), `main.py` (API layer).
+- **Configuration Management:** Uses `pydantic-settings` to robustly manage environment variables (e.g. `GEMINI_API_KEY`) via a strongly-typed `config.py` module, raising dedicated `ConfigurationError` exceptions on failure.
+- **Custom Exceptions Hierarchy:** Implements a strict `ArenaMindError` base exception class with semantic subclasses like `ModelTimeoutError` for clean error boundaries.
 - **Pydantic schema validation:** All API inputs are validated through typed Pydantic models (`QueryRequest`, `ContextSchema`, `UserRole` enum) with field-level constraints (`min_length=2`, `max_length=1000`).
 - **Type annotations:** Full Python type hints across all modules (`Dict[str, Any]`, `Generator[str, None, None]`, `Optional[OperationalBrain]`).
 - **Structured logging:** Application-wide `logging` with timestamped, leveled output for operational observability.
@@ -224,7 +226,9 @@ The following section maps each evaluation criterion to the specific implementat
 - **Streaming Output Sanitization:** SSE streaming exception handling is explicitly sanitized to prevent internal stack traces or environment metadata from leaking to clients on failure.
 - **Rate Limiting:** Both `/query` and `/stream` endpoints implement a strict `15/minute` rate limit per IP using `slowapi` to prevent abuse.
 - **Continuous Security Scanning:** CodeQL scanning is enforced through GitHub Code Scanning default setup on every push and pull request.
-- **Zero hardcoded secrets:** `GEMINI_API_KEY` is loaded exclusively from `os.environ` via `python-dotenv`. A `ValueError` is raised immediately if it is missing or empty.
+- **WAF-Style Security Headers:** A strict `@app.middleware("http")` appends `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Strict-Transport-Security` headers to every response.
+- **Audit Logging:** Every incoming request is intercepted by middleware and logged with the HTTP method, URL path, and Client IP.
+- **Zero hardcoded secrets:** `GEMINI_API_KEY` is loaded securely via `pydantic-settings`.
 - **Prompt injection defence:** `OperationalBrain._sanitize_input()` applies a compiled regex blocklist of 25+ adversarial patterns before any user input reaches the model.
 - **Enterprise safety settings:** All four Gemini `HarmCategory` filters (harassment, hate speech, sexually explicit, dangerous content) are set to `BLOCK_MEDIUM_AND_ABOVE`.
 - **System prompt guardrails:** Enforces hard-deny rules for security clearance requests, VIP logistics, surveillance details, and system internals.
@@ -232,6 +236,9 @@ The following section maps each evaluation criterion to the specific implementat
 ### ⚡ Efficiency
 - **SSE streaming endpoint** (`/api/v1/operations/stream`): Yields text chunks via Server-Sent Events as they arrive from Gemini, optimising Time-to-First-Token for mobile clients.
 - **Gemini 2.5 Flash:** Selected for maximum speed and cost efficiency — the lowest-latency model in the Gemini family.
+- **Response Caching:** Identical queries are served instantly without hitting the Gemini API using an `@alru_cache(maxsize=200)` asynchronous cache pool.
+- **Circuit Breakers:** The LLM generation logic is wrapped in a strict `asyncio.wait_for(..., timeout=8.0)` circuit breaker to prevent cascading failures if the external API hangs.
+- **Payload Compression:** FastAPI `GZipMiddleware` ensures that large JSON and SSE payloads are heavily compressed before being transmitted over stadium Wi-Fi.
 - **Zero-build frontend:** A lightweight static bundle (HTML, CSS, JS) using Tailwind CSS via CDN. No build step, no bundler, no node_modules. Loads instantly on stadium Wi-Fi.
 - **Async FastAPI:** Non-blocking ASGI architecture handles high concurrency with minimal resource overhead.
 - **Fail-safe initialisation:** The server boots even without a valid API key — `GET /health` always returns `200 OK` for CI/CD graders.
@@ -246,6 +253,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Mocked Gemini SDK:** Core tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
 
 ### ♿ Accessibility
+- **High-Contrast UI Toggle:** A dedicated accessibility toggle strictly enforces WCAG-compliant high-contrast colors (pure black/white) to ensure absolute legibility in bright outdoor stadium conditions.
 - **ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) and a deterministic post-generation guardrail (`_enforce_accessibility`) enforce barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs and escalators are strictly blocked via hardcoded overrides.
 - **Sensory accessibility:** Landmark-based directions for visually impaired users; text-only instructions for hearing-impaired users.
 - **Auto-escalation:** Mobility device mentions (wheelchair, walker, scooter) trigger ADA mode automatically — even without the flag.
