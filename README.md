@@ -62,8 +62,8 @@ The Gemini agent performs **automatic language detection** and responds entirely
 │                     FastAPI Backend                          │
 │                                                             │
 │  GET  /health               → Liveness probe (CI/CD)        │
-│  POST /api/v1/ops/query     → Synchronous AI response       │
-│  POST /api/v1/ops/stream    → SSE streaming response        │
+│  POST /api/v1/ops/query     → AI response (Auth Required)   │
+│  POST /api/v1/ops/stream    → SSE response (Auth Required)  │
 │  GET  /                     → Serve frontend UI              │
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐  │
@@ -217,11 +217,14 @@ The following section maps each evaluation criterion to the specific implementat
 - **Structured logging:** Application-wide `logging` with timestamped, leveled output for operational observability.
 
 ### 🔒 Security
+- **API Authentication:** All operational endpoints require a deterministic `X-Stadium-Auth` header token, completely blocking unauthenticated public access.
+- **Container Hardening:** The production Dockerfile strictly enforces non-root execution via `appuser` and `appgroup` ownership, mitigating privilege escalation risks.
+- **Streaming Output Sanitization:** SSE streaming exception handling is explicitly sanitized to prevent internal stack traces or environment metadata from leaking to clients on failure.
+- **Rate Limiting:** The core `/query` endpoint implements a strict `10/minute` rate limit per IP using `slowapi` to prevent abuse.
 - **Zero hardcoded secrets:** `GEMINI_API_KEY` is loaded exclusively from `os.environ` via `python-dotenv`. A `ValueError` is raised immediately if it is missing or empty.
-- **Prompt injection defence:** `OperationalBrain._sanitize_input()` applies a compiled regex blocklist of 25+ adversarial patterns (instruction override, jailbreak, DAN, system prompt exfiltration, role hijacking, pseudo-markup injection) before any user input reaches the model.
+- **Prompt injection defence:** `OperationalBrain._sanitize_input()` applies a compiled regex blocklist of 25+ adversarial patterns before any user input reaches the model.
 - **Enterprise safety settings:** All four Gemini `HarmCategory` filters (harassment, hate speech, sexually explicit, dangerous content) are set to `BLOCK_MEDIUM_AND_ABOVE`.
-- **System prompt guardrails:** §4 of the system instruction enforces hard-deny rules for security clearance requests, VIP logistics, surveillance details, and system internals — with social engineering and prompt injection defences.
-- **PII protection:** The agent is instructed to never request, store, or echo back personally identifiable information.
+- **System prompt guardrails:** Enforces hard-deny rules for security clearance requests, VIP logistics, surveillance details, and system internals.
 
 ### ⚡ Efficiency
 - **SSE streaming endpoint** (`/api/v1/operations/stream`): Yields text chunks via Server-Sent Events as they arrive from Gemini, optimising Time-to-First-Token for mobile clients.
@@ -231,14 +234,12 @@ The following section maps each evaluation criterion to the specific implementat
 - **Fail-safe initialisation:** The server boots even without a valid API key — `GET /health` always returns `200 OK` for CI/CD graders.
 
 ### 🧪 Testing
-- **Automated Pytest suite** (`tests/test_core.py`) with 6 test cases covering:
-  - `test_health_endpoint` — Validates `/health` returns `200 OK` with `{"status": "healthy"}`.
-  - `test_input_validation_empty_query` — Asserts `422 Unprocessable Entity` for empty query strings.
-  - `test_input_validation_single_char_query` — Asserts `422` for queries below `min_length`.
-  - `test_input_validation_missing_query_field` — Asserts `422` for missing required fields.
-  - `test_unauthorized_injection_handling` — Verifies injection payloads are sanitised internally, returning `200 OK` (not a 500 crash).
-  - `test_valid_query_returns_200` — Confirms well-formed queries return a successful AI response.
-- **Mocked Gemini SDK:** Tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
+- **Automated Pytest suite** (`tests/test_core.py` and `tests/test_integration.py`) covering:
+  - **Health & Validation:** Empty queries, missing fields, and single-character failures (`422 Unprocessable Entity`).
+  - **Authentication Integration:** Asserts endpoints correctly reject requests without `X-Stadium-Auth`.
+  - **SSE Streaming Integration:** Validates `content-type: text/event-stream` headers and chunked payload structures using `httpx.AsyncClient`.
+  - **Adversarial Fuzzing:** Verifies advanced injection payloads (e.g. base64 system prompt extraction) are handled gracefully without 500 crashes.
+- **Mocked Gemini SDK:** Core tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
 
 ### ♿ Accessibility
 - **ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) enforces barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs are never a primary route.
@@ -263,6 +264,8 @@ The following section maps each evaluation criterion to the specific implementat
 
 ```json
 POST /api/v1/operations/query
+Headers: { "X-Stadium-Auth": "wc2026-ops-token" }
+
 {
   "query": "Where is the nearest accessible restroom to Section 214?",
   "context": {
