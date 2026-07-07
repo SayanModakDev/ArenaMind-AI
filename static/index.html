@@ -279,6 +279,7 @@
                             </label>
                             <textarea
                                 id="queryInput"
+                                aria-label="Operations Query Input"
                                 rows="4"
                                 maxlength="1000"
                                 class="focus-ring w-full rounded-xl bg-gray-800/80 border border-gray-700/50 text-sm text-gray-100 placeholder-gray-600 px-4 py-3 font-mono resize-none hover:border-arena-600/50 hover:bg-gray-800 leading-relaxed"
@@ -357,7 +358,7 @@
                     </div>
 
                     <!-- Terminal Body -->
-                    <div id="outputArea" class="relative z-10 flex-1 p-5 sm:p-6 overflow-y-auto">
+                    <div id="outputArea" role="region" aria-live="polite" aria-label="Operations Terminal Output" class="relative z-10 flex-1 p-5 sm:p-6 overflow-y-auto">
                         <!-- Default State -->
                         <div id="defaultState" class="h-full flex flex-col items-center justify-center text-center space-y-5 animate-fade-in">
                             <div class="w-20 h-20 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center">

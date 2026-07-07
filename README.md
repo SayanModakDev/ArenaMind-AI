@@ -100,6 +100,10 @@ The Gemini agent performs **automatic language detection** and responds entirely
 | **System Instruction Architecture** | All operational logic (phase compliance, accessibility, multilingual, security) is encoded in a structured system prompt — not hardcoded in application logic. This makes the agent's behaviour auditable, versioned, and modifiable without code changes |
 | **Premium UI & Branding** | Custom AI-generated logo and favicon natively integrated via `static/` mount with Tailwind CSS, ensuring a highly polished, immersive "Command Terminal" aesthetic that feels production-ready. |
 
+### Enterprise Scalability & RAG Hooks
+
+ArenaMind AI leverages Google Cloud Run's native auto-scaling (scaling from 0 to 1000 concurrent instances) for high-density stadium traffic. The backend features extensible architectural hooks designed for instant Dynamic Map RAG integration.
+
 ---
 
 ## 🚀 Quick Start
