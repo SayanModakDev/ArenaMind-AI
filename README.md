@@ -232,7 +232,7 @@ The following section maps each evaluation criterion to the specific implementat
 ### ⚡ Efficiency
 - **SSE streaming endpoint** (`/api/v1/operations/stream`): Yields text chunks via Server-Sent Events as they arrive from Gemini, optimising Time-to-First-Token for mobile clients.
 - **Gemini 2.5 Flash:** Selected for maximum speed and cost efficiency — the lowest-latency model in the Gemini family.
-- **Zero-build frontend:** A single HTML file (~39KB) using Tailwind CSS via CDN. No build step, no bundler, no node_modules. Loads instantly on stadium Wi-Fi.
+- **Zero-build frontend:** A lightweight static bundle (HTML, CSS, JS) using Tailwind CSS via CDN. No build step, no bundler, no node_modules. Loads instantly on stadium Wi-Fi.
 - **Async FastAPI:** Non-blocking ASGI architecture handles high concurrency with minimal resource overhead.
 - **Fail-safe initialisation:** The server boots even without a valid API key — `GET /health` always returns `200 OK` for CI/CD graders.
 
