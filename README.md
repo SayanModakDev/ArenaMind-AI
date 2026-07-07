@@ -242,6 +242,7 @@ The following section maps each evaluation criterion to the specific implementat
   - **Authentication Integration:** Asserts endpoints correctly reject requests without `X-Stadium-Auth`.
   - **SSE Streaming Integration:** Validates `content-type: text/event-stream` headers and chunked payload structures using `httpx.AsyncClient`.
   - **Adversarial Fuzzing:** Verifies advanced injection payloads (e.g. base64 system prompt extraction) are handled gracefully without 500 crashes.
+- **Coverage:** CI enforces an 85% coverage threshold using `pytest-cov --cov-fail-under=85`.
 - **Mocked Gemini SDK:** Core tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
 
 ### ♿ Accessibility
