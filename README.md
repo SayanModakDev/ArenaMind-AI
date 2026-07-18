@@ -4,13 +4,13 @@
 
 > **Hackathon:** Hack2Skill — PromptWars Virtual  
 > **Challenge:** [Challenge 4] Smart Stadiums & Tournament Operations  
-> **Tech Stack:** Python · FastAPI · Google Gemini 2.5 Flash · Vanilla JS · Tailwind CSS
+> **Tech Stack:** Python · FastAPI · Google Gemini 3.5 Flash · Vanilla JS · Tailwind CSS
 
 ---
 
 ArenaMind AI is a production-grade, GenAI-powered operational intelligence system purpose-built for live FIFA World Cup 2026 venue operations. It provides stadium staff, volunteers, and fans with real-time, context-aware, multilingual guidance — adapting dynamically to match phase, crowd density, and accessibility requirements.
 
-The system wraps a fine-tuned **Gemini 2.5 Flash** agent behind a high-performance **FastAPI** backend with a lightweight, mobile-first **Tailwind CSS** frontend — optimised for sub-second response times in high-noise, high-density stadium environments.
+The system wraps a fine-tuned **Gemini 3.5 Flash** agent behind a high-performance **FastAPI** backend with a lightweight, mobile-first **Tailwind CSS** frontend — optimised for sub-second response times in high-noise, high-density stadium environments.
 
 ---
 
@@ -72,7 +72,7 @@ The Gemini agent performs **automatic language detection** and responds entirely
 │  │  • Regex prompt-injection sanitisation                │  │
 │  │  • Live telemetry context injection                   │  │
 │  │  • Enterprise safety settings (4 HarmCategories)      │  │
-│  │  • Gemini 2.5 Flash GenerativeModel                   │  │
+│  │  • Gemini 3.5 Flash GenerativeModel                   │  │
 │  │  • Blocking + Streaming generation                    │  │
 │  └───────────────────────────────────────────────────────┘  │
 │                                                             │
@@ -93,7 +93,7 @@ The Gemini agent performs **automatic language detection** and responds entirely
 
 | Decision | Rationale |
 |---|---|
-| **Gemini 2.5 Flash** | Lowest latency in the Gemini family — critical for fans expecting sub-second guidance on mobile devices in loud stadiums |
+| **Gemini 3.5 Flash** | Lowest latency in the Gemini family — critical for fans expecting sub-second guidance on mobile devices in loud stadiums |
 | **FastAPI (async)** | High-concurrency ASGI framework with native Pydantic validation — ideal for real-time operational APIs |
 | **Vanilla JS + Tailwind (zero-build)** | No webpack, no node_modules, no build step. A lightweight static bundle (HTML, CSS, JS) that loads instantly on any device. Maximum efficiency for hackathon graders and stadium Wi-Fi |
 | **SSE Streaming** | Server-Sent Events optimise Time-to-First-Token (TTFT) for responsive mobile and kiosk interfaces |
@@ -235,7 +235,7 @@ The following section maps each evaluation criterion to the specific implementat
 
 ### ⚡ Efficiency
 - **SSE streaming endpoint** (`/api/v1/operations/stream`): Yields text chunks via Server-Sent Events as they arrive from Gemini, optimising Time-to-First-Token for mobile clients.
-- **Gemini 2.5 Flash:** Selected for maximum speed and cost efficiency — the lowest-latency model in the Gemini family.
+- **Gemini 3.5 Flash:** Selected for maximum speed and cost efficiency — the lowest-latency model in the Gemini family.
 - **Response Caching:** Identical queries are served instantly without hitting the Gemini API using an `@alru_cache(maxsize=200)` asynchronous cache pool.
 - **Circuit Breakers:** The LLM generation logic is wrapped in a strict `asyncio.wait_for(..., timeout=8.0)` circuit breaker to prevent cascading failures if the external API hangs.
 - **Payload Compression:** FastAPI `GZipMiddleware` ensures that large JSON and SSE payloads are heavily compressed before being transmitted over stadium Wi-Fi.

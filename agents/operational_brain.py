@@ -105,12 +105,12 @@ class OperationalBrain:
         }
 
         # ── 3. Model Initialisation ─────────────────────────────────────
-        # gemini-2.5-flash is the latest free-tier Flash model, chosen
+        # gemini-3.5-flash is the latest free-tier Flash model, chosen
         # for maximum efficiency and its low-latency profile — critical
         # for real-time stadium operations where fans expect sub-second
         # guidance on mobile devices in noisy environments.
         self._model: genai.GenerativeModel = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
+            model_name="gemini-3.5-flash",
             system_instruction=STADIUM_SYSTEM_INSTRUCTION,
             safety_settings=self._safety_settings,
         )
