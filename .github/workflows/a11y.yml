@@ -22,11 +22,11 @@ jobs:
         
       - name: Run Accessibility Tests
         run: |
-          # Start static server
-          serve -l 8000 static &
+          # Start static server at repo root so /static/* absolute paths work
+          serve -l 8000 . &
           # Wait for server to boot
           sleep 3
           # Sync Chrome and ChromeDriver versions to fix version mismatch on runner
           npx -y browser-driver-manager install chrome
           # Run Axe tests and fail on serious/critical violations
-          axe http://localhost:8000/index.html --exit
+          axe http://localhost:8000/static/index.html --exit
