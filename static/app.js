@@ -112,6 +112,16 @@ async function executeQuery(event) {
         return;
     }
 
+    const tokenInput = document.getElementById('authToken');
+    const token = tokenInput ? tokenInput.value.trim() : '';
+
+    if (!token) {
+        showState('error');
+        errorText.textContent = 'Auth Token is required. Please paste a valid token in the Control Panel.';
+        setStatus('error', 'Authentication Required');
+        return;
+    }
+
     // Build payload matching the API schema exactly
     const selectedLanguage = languageSim ? languageSim.value : 'English';
     const payload = {
@@ -131,9 +141,6 @@ async function executeQuery(event) {
     setButtonLoading(true);
 
     try {
-        const tokenInput = document.getElementById('authToken');
-        const token = tokenInput ? tokenInput.value.trim() : '';
-        
         const response = await fetch('/api/v1/operations/stream', {
             method: 'POST',
             headers: { 

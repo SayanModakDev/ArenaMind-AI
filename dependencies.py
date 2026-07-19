@@ -16,17 +16,18 @@ from agents.operational_brain import OperationalBrain
 from config import settings
 
 # ── Authentication ──────────────────────────────────────────────────────
-api_key_header = APIKeyHeader(name="X-Stadium-Auth")
+api_key_header = APIKeyHeader(name="X-Stadium-Auth", auto_error=False)
 
 
 def verify_api_key(api_key: str = Security(api_key_header)) -> UserRole:
     """Validate the X-Stadium-Auth header against the configured tokens."""
-    if api_key == settings.FAN_AUTH_TOKEN:
-        return UserRole.FAN
-    elif api_key == settings.VOLUNTEER_AUTH_TOKEN:
-        return UserRole.VOLUNTEER
-    elif api_key == settings.STAFF_AUTH_TOKEN:
-        return UserRole.STAFF
+    if api_key:
+        if api_key == settings.FAN_AUTH_TOKEN:
+            return UserRole.FAN
+        elif api_key == settings.VOLUNTEER_AUTH_TOKEN:
+            return UserRole.VOLUNTEER
+        elif api_key == settings.STAFF_AUTH_TOKEN:
+            return UserRole.STAFF
         
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
