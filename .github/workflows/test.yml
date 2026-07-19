@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Pytest
+        env:
+          # Following best practice: Even dummy/mock tokens are pulled from GitHub Secrets.
+          # You will need to add MOCK_GEMINI_API_KEY="mock_key_for_testing" in your repository secrets
+          # so that the integration tests safely hit the @pytest.mark.skipif block.
+          GEMINI_API_KEY: ${{ secrets.MOCK_GEMINI_API_KEY }}
+          STADIUM_AUTH_TOKEN: ${{ secrets.MOCK_STADIUM_AUTH_TOKEN }}
+        run: pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+        
+      - name: Coverage Summary
+        run: |
+          # Extract the total coverage percentage from the coverage report
+          TOTAL=$(coverage report | grep 'TOTAL' | awk '{print $NF}')
+          echo "Total coverage: $TOTAL"
+          
+          # Print to the GitHub Actions Job Summary UI
+          echo "### 🧪 Pytest Coverage: $TOTAL" >> $GITHUB_STEP_SUMMARY

@@ -10,7 +10,7 @@ from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status, Request, Security, Depends
+from fastapi import FastAPI, HTTPException, status, Request, Security
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
@@ -97,7 +97,7 @@ except Exception as exc:
     )
 
 # ── Routers ─────────────────────────────────────────────────────────────
-from api.routes import router
+from api.routes import router  # noqa: E402
 app.include_router(router)
 
 # ═════════════════════════════════════════════════════════════════════════
