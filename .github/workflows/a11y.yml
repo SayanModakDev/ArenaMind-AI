@@ -26,5 +26,7 @@ jobs:
           serve -l 8000 static &
           # Wait for server to boot
           sleep 3
+          # Sync Chrome and ChromeDriver versions to fix version mismatch on runner
+          npx -y browser-driver-manager install chrome
           # Run Axe tests and fail on serious/critical violations
           axe http://localhost:8000/index.html --exit
