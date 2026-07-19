@@ -19,6 +19,18 @@ The system wraps a fine-tuned **Gemini 3.5 Flash** agent behind a high-performan
 
 ---
 
+## 🧪 Live Evaluation Credentials (Hack2Skill Judges)
+
+If you are evaluating the **live deployed URL** of this project, you will need an Auth Token to use the API (due to our strict Role-Based Access Control). Please paste one of the following evaluation tokens into the UI's "Auth Token" field:
+
+- **Staff Access (Full Clearance):** `staff-eval-2026`
+- **Volunteer Access:** `volunteer-eval-2026`
+- **Fan Access (Restricted):** `fan-eval-2026`
+
+*(Note: These tokens are safely configured on our live deployment server. The `GEMINI_API_KEY` remains strictly secured and is not exposed).*
+
+---
+
 ## 🏆 Problem Statement Alignment — Challenge 4
 
 ArenaMind AI directly addresses the three core operational pillars of the Smart Stadiums & Tournament Operations challenge:
