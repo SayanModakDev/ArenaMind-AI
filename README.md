@@ -1,5 +1,10 @@
 # 🏟️ ArenaMind AI — FIFA World Cup 2026 Smart Stadium Operations
 
+[![Tests](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/test.yml/badge.svg)](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/test.yml)
+[![Lint](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/lint.yml/badge.svg)](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/lint.yml)
+[![Accessibility](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/a11y.yml/badge.svg)](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/a11y.yml)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen?logo=pytest&logoColor=white)](https://github.com/SayanModakDev/ArenaMind-AI/actions/workflows/test.yml)
+
 **An operational intelligence engine delivering real-time, AI-powered stadium guidance for the FIFA World Cup 2026.**
 
 > **Hackathon:** Hack2Skill — PromptWars Virtual  

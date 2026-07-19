@@ -28,7 +28,7 @@ jobs:
           # We provide explicit fallbacks so CI passes even if secrets aren't configured yet.
           GEMINI_API_KEY: ${{ secrets.MOCK_GEMINI_API_KEY || 'mock_key_for_testing' }}
           STADIUM_AUTH_TOKEN: ${{ secrets.MOCK_STADIUM_AUTH_TOKEN || 'mock-token-for-tests' }}
-        run: pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+        run: pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --cov-fail-under=85
         
       - name: Coverage Summary
         run: |
