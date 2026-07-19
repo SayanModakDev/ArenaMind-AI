@@ -15,8 +15,6 @@ import asyncio
 import time
 import logging
 
-logger = logging.getLogger(__name__)
-
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from async_lru import alru_cache
@@ -24,6 +22,8 @@ from async_lru import alru_cache
 from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
 from exceptions import ModelTimeoutError, ConfigurationError
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class OperationalBrain:
