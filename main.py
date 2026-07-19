@@ -27,6 +27,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from agents.operational_brain import OperationalBrain
+from config import settings
 
 # ── Environment & Logging ───────────────────────────────────────────────
 load_dotenv()
@@ -54,7 +55,7 @@ app = FastAPI(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -74,7 +75,7 @@ api_key_header = APIKeyHeader(name="X-Stadium-Auth")
 
 def verify_api_key(api_key: str = Security(api_key_header)):
     """Simple deterministic hardcoded token validation."""
-    if api_key != "wc2026-ops-token":
+    if api_key != settings.STADIUM_AUTH_TOKEN:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing X-Stadium-Auth token",
