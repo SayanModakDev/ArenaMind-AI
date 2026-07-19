@@ -117,3 +117,75 @@ async def test_accessibility_guardrails_no_stairs_escalator(monkeypatch):
             assert "stairs" not in response_text, "Response contained 'stairs' despite accessibility_required=True"
             assert "escalator" not in response_text, "Response contained 'escalator' despite accessibility_required=True"
             assert "elevator" in response_text or "ramp" in response_text, "Response should have been overridden to suggest elevator/ramp"
+
+@pytest.mark.anyio
+async def test_sse_stream_never_emits_non_compliant_chunks(monkeypatch):
+    """
+    Verify that when accessibility_required=True, the SSE stream NEVER
+    emits a chunk containing 'stairs' or 'escalator' at ANY point —
+    not just after the full stream has finished.
+
+    The generate_stream() method buffers the entire response and runs
+    _enforce_accessibility() before yielding, so even a mocked model
+    that produces non-compliant text chunk-by-chunk must be caught
+    before anything reaches the client.
+    """
+    from unittest.mock import MagicMock
+
+    # Build a mock streaming response that yields non-compliant chunks
+    mock_chunk_1 = MagicMock()
+    mock_chunk_1.parts = [MagicMock()]
+    mock_chunk_1.text = "Please take the stairs "
+
+    mock_chunk_2 = MagicMock()
+    mock_chunk_2.parts = [MagicMock()]
+    mock_chunk_2.text = "and escalator "
+
+    mock_chunk_3 = MagicMock()
+    mock_chunk_3.parts = [MagicMock()]
+    mock_chunk_3.text = "to reach the second floor."
+
+    def mock_generate_content(prompt, stream=False):
+        return iter([mock_chunk_1, mock_chunk_2, mock_chunk_3])
+
+    # Patch the _model on the live brain instance (instance attribute,
+    # not a class attribute) so generate_stream() uses our mock.
+    brain = app.state.brain
+    monkeypatch.setattr(brain, "_model", MagicMock(generate_content=mock_generate_content))
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/v1/operations/stream",
+            json={
+                "query": "How do I get to the second floor?",
+                "context": {
+                    "accessibility_required": True
+                }
+            },
+            headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]}
+        )
+        assert response.status_code == 200
+        assert "text/event-stream" in response.headers.get("content-type", "").lower()
+
+        # Parse SSE events and check every single chunk
+        raw_body = response.text
+        chunks = []
+        for line in raw_body.splitlines():
+            if line.startswith("data: ") and line.strip() != "data: [DONE]":
+                chunks.append(line[len("data: "):].strip())
+
+        assert len(chunks) > 0, "Expected at least one SSE data chunk"
+        for i, chunk in enumerate(chunks):
+            chunk_lower = chunk.lower()
+            assert "stairs" not in chunk_lower, (
+                f"SSE chunk {i} contained 'stairs': {chunk!r}"
+            )
+            assert "escalator" not in chunk_lower, (
+                f"SSE chunk {i} contained 'escalator': {chunk!r}"
+            )
+        # The override message should contain ADA-compliant alternatives
+        full_streamed_text = " ".join(chunks).lower()
+        assert "elevator" in full_streamed_text or "ramp" in full_streamed_text, (
+            "Streamed response should have been overridden to suggest elevator/ramp"
+        )
+

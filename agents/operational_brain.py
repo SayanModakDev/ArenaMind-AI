@@ -292,16 +292,25 @@ class OperationalBrain:
         """
         Generate a streaming response from the Gemini model.
 
-        Yields text chunks as they arrive, optimising
+        When ``accessibility_required`` is **False** (the common case),
+        chunks are yielded token-by-token as they arrive, optimising
         Time-to-First-Token (TTFT) for responsive mobile and kiosk
         interfaces inside the stadium.
+
+        When ``accessibility_required`` is **True**, the stream is
+        buffered internally and the complete text is run through
+        ``_enforce_accessibility()`` before a single SSE event is
+        emitted.  This trades streaming latency for a **guaranteed-safe**
+        output — a wheelchair user will never see "take the stairs"
+        flash across their screen before an override arrives.
 
         Args:
             query: The fan's natural-language question or request.
             context_dict: Real-time stadium telemetry dictionary.
 
         Yields:
-            Successive text chunks from the model as they are generated.
+            Successive text chunks from the model as they are generated
+            (or a single corrected chunk when accessibility is required).
 
         Raises:
             google.generativeai.types.BlockedPromptException:
@@ -310,19 +319,30 @@ class OperationalBrain:
                 If the safety filters block the generated response.
         """
         prompt: str = self._build_prompt(query, context_dict)
+        accessibility_required: bool = bool(
+            context_dict.get("accessibility_required")
+        )
 
         response_stream = self._model.generate_content(
             prompt,
             stream=True,
         )
 
-        full_text = ""
-        for chunk in response_stream:
-            if chunk.parts:
-                yield chunk.text
-                full_text += chunk.text
+        if accessibility_required:
+            # ── Option A: buffer-then-validate ──────────────────────
+            # Collect every chunk silently, apply the deterministic
+            # accessibility guardrail on the full text, then yield the
+            # corrected result as a single event.
+            full_text = ""
+            for chunk in response_stream:
+                if chunk.parts:
+                    full_text += chunk.text
 
-        # Post-validation on the complete stream
-        override_text = self._enforce_accessibility(full_text, context_dict)
-        if override_text != full_text:
-            yield "\n\n[SYSTEM OVERRIDE]: Accessible route strictly required. Please use the nearest elevator."
+            safe_text = self._enforce_accessibility(full_text, context_dict)
+            yield safe_text
+        else:
+            # ── Standard token-by-token streaming ──────────────────
+            for chunk in response_stream:
+                if chunk.parts:
+                    yield chunk.text
+
