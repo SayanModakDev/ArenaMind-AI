@@ -121,8 +121,7 @@ async function executeQuery(event) {
             sector_id:            "100",
             gates:                { "GATE_4": "NORMAL", "GATE_7": "LOW" },
             facilities:           { "RESTROOM_B": "OPERATIONAL", "FIRST_AID_2": "STAFFED" },
-            accessibility_required: accessSelect.value === 'true',
-            user_role:            "STAFF"
+            accessibility_required: accessSelect.value === 'true'
         }
     };
 
@@ -132,11 +131,14 @@ async function executeQuery(event) {
     setButtonLoading(true);
 
     try {
+        const tokenInput = document.getElementById('authToken');
+        const token = tokenInput ? tokenInput.value.trim() : '';
+        
         const response = await fetch('/api/v1/operations/stream', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-Stadium-Auth': 'wc2026-ops-token'
+                'X-Stadium-Auth': token
             },
             body: JSON.stringify(payload),
         });
