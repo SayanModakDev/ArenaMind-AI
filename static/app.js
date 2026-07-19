@@ -19,6 +19,26 @@ const responseText     = document.getElementById('responseText');
 const echoText         = document.getElementById('echoText');
 const responseTimestamp = document.getElementById('responseTimestamp');
 const errorText        = document.getElementById('errorText');
+const languageSim      = document.getElementById('languageSim');
+
+// ── Live Telemetry Simulation ──────────────────────────────
+const liveCrowdDensity = document.getElementById('liveCrowdDensity');
+const liveGate = document.getElementById('liveGate');
+const liveWeather = document.getElementById('liveWeather');
+
+const crowdDensities = ['LOW', 'MODERATE', 'HIGH', 'CRITICAL'];
+const gateStatuses = ['NORMAL', 'HIGH', 'MAX CAPACITY', 'DIVERTING'];
+const weathers = ['CLEAR', 'CLOUDY', 'LIGHT RAIN', 'HEAVY RAIN'];
+
+setInterval(() => {
+    const crowd = crowdDensities[Math.floor(Math.random() * crowdDensities.length)];
+    const gate = gateStatuses[Math.floor(Math.random() * gateStatuses.length)];
+    const weather = weathers[Math.floor(Math.random() * weathers.length)];
+    
+    if (liveCrowdDensity) liveCrowdDensity.textContent = `Crowd Density: ${crowd}`;
+    if (liveGate) liveGate.textContent = `Gate 4: ${gate}`;
+    if (liveWeather) liveWeather.textContent = `Weather: ${weather}`;
+}, 5000);
 
 // ── UI Toggles ─────────────────────────────────────────────
 contrastToggle.addEventListener('click', () => {
@@ -93,8 +113,9 @@ async function executeQuery(event) {
     }
 
     // Build payload matching the API schema exactly
+    const selectedLanguage = languageSim ? languageSim.value : 'English';
     const payload = {
-        query: query,
+        query: `${query} (Please respond in ${selectedLanguage})`,
         context: {
             match_phase:          matchPhaseSelect.value,
             sector_id:            "100",
