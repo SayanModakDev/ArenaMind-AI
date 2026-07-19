@@ -31,7 +31,7 @@ The system ingests **live match-phase telemetry** (INGRESS → MATCH-TIME → EG
 - **MATCH-TIME:** Minimal-disruption re-entry guidance, concession queue optimisation, medical emergency routing with immediate First Aid station directions.
 - **EGRESS:** Crowd-flow optimisation, phased exit coordination, real-time transport guidance (shuttle zones, rideshare staging, metro routes).
 
-Each query is enriched with structured telemetry data — including `crowd_density`, `sector_id`, `gate_congestion`, and `match_phase` — injected directly into the prompt before generation.
+Each query is enriched with structured telemetry data — including `sector_id`, `match_phase`, `gates` (a dict of gate ID to congestion level), and `facilities` (a dict of facility ID to status) — injected directly into the prompt before generation.
 
 ### 2. Accessibility & Smart Navigation (ADA Compliance)
 
