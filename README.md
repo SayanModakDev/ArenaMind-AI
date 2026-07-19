@@ -310,6 +310,13 @@ Headers: { "X-Stadium-Auth": "your_secure_auth_token" }
 
 ---
 
+## 🚧 Known Limitations & Roadmap
+
+- **Google Gemini SDK:** The project currently uses the `google-generativeai` SDK, which Google has recently deprecated in favour of `google-genai`. This does not affect current functionality, as the deprecated package remains fully operational. However, a migration to `google-genai` is planned for the near future to remain on the actively maintained SDK.
+- **Granular Authorisation:** All endpoints currently use a single shared `X-Stadium-Auth` token. Future iterations will introduce Role-Based Access Control (RBAC) to explicitly authenticate and differentiate permissions between standard fans, volunteers, and stadium staff.
+
+---
+
 ## 📜 License
 
 This project was built for the Hack2Skill PromptWars Virtual Hackathon.
