@@ -231,3 +231,38 @@ class TestValidQuery:
             f"Expected status 'success', got '{data['status']}'"
         )
         assert len(data["response"]) > 0, "AI response should not be empty."
+
+# ═════════════════════════════════════════════════════════════════════════
+#  TEST 5 — Model Configuration
+# ═════════════════════════════════════════════════════════════════════════
+
+class TestModelConfig:
+    """Validates the OperationalBrain is configured with safety/cost limits."""
+
+    def test_model_generation_config_max_tokens(self):
+        """
+        Verify that OperationalBrain configures the GenerativeModel with a 
+        generation_config that caps max_output_tokens to settings.MAX_TOKENS.
+        """
+        from agents.operational_brain import OperationalBrain
+        from config import settings
+        from unittest.mock import patch
+        
+        # Patch the GenerativeModel class inside operational_brain so we can 
+        # intercept the call and inspect its arguments without making a real API call.
+        with patch("agents.operational_brain.genai.GenerativeModel") as MockModel:
+            _ = OperationalBrain()
+            
+            # Ensure it was instantiated
+            MockModel.assert_called_once()
+            
+            kwargs = MockModel.call_args.kwargs
+            assert "generation_config" in kwargs, "generation_config was not passed to GenerativeModel"
+            
+            config = kwargs["generation_config"]
+            
+            # The config might be a dict or a GenerationConfig object depending on SDK version
+            if isinstance(config, dict):
+                assert config.get("max_output_tokens") == settings.MAX_TOKENS
+            else:
+                assert getattr(config, "max_output_tokens", None) == settings.MAX_TOKENS

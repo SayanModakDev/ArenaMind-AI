@@ -108,10 +108,17 @@ class OperationalBrain:
         # for maximum efficiency and its low-latency profile — critical
         # for real-time stadium operations where fans expect sub-second
         # guidance on mobile devices in noisy environments.
+        #
+        # The generation_config caps both cost and worst-case latency per 
+        # request, complementing the system prompt's soft 150-word guidance 
+        # with a hard backend-enforced ceiling.
         self._model: genai.GenerativeModel = genai.GenerativeModel(
             model_name="gemini-3.5-flash",
             system_instruction=STADIUM_SYSTEM_INSTRUCTION,
             safety_settings=self._safety_settings,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=settings.MAX_TOKENS
+            ),
         )
 
     # ── Private Helpers ─────────────────────────────────────────────────
