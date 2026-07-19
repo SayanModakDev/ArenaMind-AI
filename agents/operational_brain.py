@@ -96,7 +96,7 @@ class OperationalBrain:
         # ── 2. Enterprise Safety Settings ───────────────────────────────
         # Block medium-and-above probability content across all harm
         # categories to enforce a family-friendly, stadium-safe output.
-        self._safety_settings: Dict[HarmCategory, HarmBlockThreshold] = {
+        self._safety_settings: Dict[Any, Any] = {
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
