@@ -1,4 +1,3 @@
-import pytest
 from pydantic import ValidationError
 from hypothesis import given, strategies as st
 from main import QueryRequest

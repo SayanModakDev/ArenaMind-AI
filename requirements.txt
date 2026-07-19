@@ -20,3 +20,4 @@ async-lru==2.0.4
 pytest-cov>=5.0.0
 pydantic-settings>=2.0.0
 hypothesis>=6.0.0
+ruff>=0.1.0

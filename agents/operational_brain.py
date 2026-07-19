@@ -7,11 +7,10 @@ settings, prompt-injection defences, and real-time telemetry injection
 for live FIFA World Cup 2026 venue operations.
 """
 
-import os
 import re
 import json
 import hashlib
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Generator
 import asyncio
 
 import google.generativeai as genai
@@ -19,7 +18,7 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from async_lru import alru_cache
 
 from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
-from exceptions import ModelTimeoutError, ConfigurationError, ArenaMindError
+from exceptions import ModelTimeoutError, ConfigurationError
 from config import settings
 
 
@@ -151,14 +150,13 @@ class OperationalBrain:
 
         return cleaned
 
-    @staticmethod
-    def _build_telemetry_block(context: Dict[str, Any]) -> str:
+    def _build_telemetry_context(self, context_data: dict) -> str:
         """
         Format the real-time stadium telemetry context into a
         structured text block that is prepended to every user query.
 
         Args:
-            context: Dictionary containing live operational data.
+            context_data (dict): Dictionary containing live operational data.
                 Expected keys (all optional — missing keys are
                 reported as "N/A"):
                     - current_phase (str)
@@ -172,12 +170,12 @@ class OperationalBrain:
                     - timestamp_utc (str)
 
         Returns:
-            A formatted multi-line string block.
+            str: A formatted multi-line string block containing the telemetry data.
         """
 
         def _get(key: str, default: str = "N/A") -> str:
             """Safely retrieve a context value as a display string."""
-            value = context.get(key)
+            value = context_data.get(key)
             if value is None:
                 return default
             if isinstance(value, bool):
@@ -203,14 +201,14 @@ class OperationalBrain:
         live telemetry data.
 
         Args:
-            query: Raw user query (will be sanitised).
-            context_dict: Live stadium telemetry dictionary.
+            query (str): Raw user query (will be sanitised).
+            context_dict (Dict[str, Any]): Live stadium telemetry dictionary.
 
         Returns:
-            The fully constructed prompt string ready for the model.
+            str: The fully constructed prompt string ready for the model.
         """
         safe_query: str = self._sanitize_input(query)
-        telemetry_block: str = self._build_telemetry_block(context_dict)
+        telemetry_block: str = self._build_telemetry_context(context_dict)
 
         return (
             f"{telemetry_block}\n"
@@ -256,14 +254,18 @@ class OperationalBrain:
         Generate a complete (blocking/cached) response from the Gemini model.
 
         This method awaits the full response and uses async_lru caching 
-        to return instantly for identical queries.
+        to return instantly for identical queries. The caching mechanism hashes the 
+        input query and context dictionary to create a unique key. If the same query 
+        and context are encountered again, the cached response is returned, completely 
+        bypassing the Gemini API to save costs and reduce latency. Before hitting the 
+        cache, the context is dynamically injected via `_build_telemetry_context`.
 
         Args:
-            query: The fan's natural-language question or request.
-            context_dict: Real-time stadium telemetry dictionary.
+            query (str): The fan's natural-language question or request.
+            context_dict (Dict[str, Any]): Real-time stadium telemetry dictionary.
 
         Returns:
-            The model's full text response as a single string.
+            str: The model's full text response as a single string.
         """
         prompt: str = self._build_prompt(query, context_dict)
 

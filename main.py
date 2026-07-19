@@ -27,7 +27,6 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from agents.operational_brain import OperationalBrain
-from config import settings
 
 # ── Environment & Logging ───────────────────────────────────────────────
 load_dotenv()
@@ -273,9 +272,24 @@ async def operations_stream(request: Request, payload: QueryRequest, api_key: st
     Server-Sent Events (SSE), optimising Time-to-First-Token for
     mobile and kiosk clients inside the stadium.
 
+    The SSE streaming strategy is implemented by iterating over the 
+    chunks yielded from `OperationalBrain.generate_stream`. By flushing 
+    each chunk as soon as it is generated, the frontend can render words 
+    in real-time instead of waiting for the full LLM generation to complete.
+    This provides a much more responsive user experience in a fast-paced 
+    stadium environment.
+
     Each event follows the SSE format::
 
         data: <text chunk>\\n\\n
+
+    Args:
+        request (Request): The incoming FastAPI request.
+        payload (QueryRequest): The parsed request body containing the query and context.
+        api_key (str): The validated API key from the dependency injection.
+
+    Returns:
+        StreamingResponse: A FastAPI response streaming the text chunks.
     """
     active_brain = _require_brain()
     context_dict = _context_to_dict(payload.context)
