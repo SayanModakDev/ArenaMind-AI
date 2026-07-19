@@ -63,7 +63,6 @@ def valid_payload() -> dict:
             "gates": {"GATE_4": "HIGH"},
             "facilities": {"RESTROOM_B": "OPEN"},
             "accessibility_required": True,
-            "user_role": "FAN",
         },
     }
 
@@ -83,7 +82,6 @@ def injection_payload() -> dict:
             "gates": {"GATE_4": "LOW"},
             "facilities": {"RESTROOM_B": "OPEN"},
             "accessibility_required": False,
-            "user_role": "FAN",
         },
     }
 
@@ -131,11 +129,10 @@ class TestInputValidation:
                 "gates": {"GATE_4": "MODERATE"},
             "facilities": {"RESTROOM_B": "OPEN"},
                 "accessibility_required": False,
-                "user_role": "FAN",
             },
         }
 
-        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]})
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
         assert response.status_code == 422, (
             f"Expected 422 for empty query, got {response.status_code}"
@@ -151,7 +148,7 @@ class TestInputValidation:
             "context": {},
         }
 
-        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]})
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
         assert response.status_code == 422, (
             f"Expected 422 for single-char query, got {response.status_code}"
@@ -163,7 +160,7 @@ class TestInputValidation:
         """
         payload = {"context": {}}
 
-        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]})
+        response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
         assert response.status_code == 422, (
             f"Expected 422 for missing query, got {response.status_code}"
@@ -191,7 +188,7 @@ class TestInjectionHandling:
         response = client.post(
             "/api/v1/operations/query",
             json=injection_payload,
-            headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]}
+            headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]}
         )
 
         assert response.status_code == 200, (
@@ -219,7 +216,7 @@ class TestValidQuery:
         response = client.post(
             "/api/v1/operations/query",
             json=valid_payload,
-            headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]}
+            headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]}
         )
 
         assert response.status_code == 200, (

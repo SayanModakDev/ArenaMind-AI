@@ -144,7 +144,9 @@ Create a `.env` file in the project root. **API keys are never hardcoded** — t
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-STADIUM_AUTH_TOKEN=your_secure_auth_token
+FAN_AUTH_TOKEN=your_fan_token
+VOLUNTEER_AUTH_TOKEN=your_volunteer_token
+STAFF_AUTH_TOKEN=your_staff_token
 ```
 
 > ⚠️ The `.env` file is included in `.gitignore` and will never be committed to version control.
@@ -172,13 +174,13 @@ The repository includes a highly-optimised `Dockerfile` ready for Google Cloud R
 docker build -t arenamind-ai .
 
 # 2. Run the container locally
-docker run -p 8080:8080 -e GEMINI_API_KEY="your_api_key_here" -e STADIUM_AUTH_TOKEN="your_secure_auth_token" arenamind-ai
+docker run -p 8080:8080 -e GEMINI_API_KEY="your_api_key_here" -e FAN_AUTH_TOKEN="your_fan_token" -e VOLUNTEER_AUTH_TOKEN="your_volunteer_token" -e STAFF_AUTH_TOKEN="your_staff_token" arenamind-ai
 
 # 3. Deploy to Google Cloud Run
 gcloud run deploy arenamind-ai \
   --source . \
   --port 8080 \
-  --set-env-vars="GEMINI_API_KEY=your_api_key_here,STADIUM_AUTH_TOKEN=your_secure_auth_token" \
+  --set-env-vars="GEMINI_API_KEY=your_api_key_here,FAN_AUTH_TOKEN=your_fan_token,VOLUNTEER_AUTH_TOKEN=your_volunteer_token,STAFF_AUTH_TOKEN=your_staff_token" \
   --allow-unauthenticated
 ```
 
@@ -231,7 +233,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Structured logging:** Application-wide `logging` with timestamped, leveled output for operational observability.
 
 ### 🔒 Security
-- **API Authentication:** All operational endpoints require a deterministic `X-Stadium-Auth` header token, completely blocking unauthenticated public access.
+- **API Authentication & RBAC:** All operational endpoints require a deterministic `X-Stadium-Auth` header token that maps to a specific role (FAN, VOLUNTEER, STAFF). This prevents unauthorized access and enforces hard 403 guardrails on security-sensitive queries (e.g., "security camera blind spots" strictly requires a STAFF token).
 - **Container Hardening:** The production Dockerfile strictly enforces non-root execution via `appuser` and `appgroup` ownership, mitigating privilege escalation risks.
 - **Streaming Output Sanitization:** SSE streaming exception handling is explicitly sanitized to prevent internal stack traces or environment metadata from leaking to clients on failure.
 - **Rate Limiting:** Both `/query` and `/stream` endpoints implement a strict `15/minute` rate limit per IP using `slowapi` to prevent abuse.
@@ -296,15 +298,14 @@ Headers: { "X-Stadium-Auth": "your_secure_auth_token" }
     "match_phase": "MATCH_TIME",
     "sector_id": "SEC-214",
     "gates": {
-      "GATE_4": "HIGH",
+      "GATE_4": "MODERATE",
       "GATE_7": "LOW"
     },
     "facilities": {
       "RESTROOM_B": "OPEN",
       "FIRST_AID_2": "STAFFED"
     },
-    "accessibility_required": true,
-    "user_role": "FAN"
+    "accessibility_required": true
   }
 }
 ```
@@ -314,7 +315,6 @@ Headers: { "X-Stadium-Auth": "your_secure_auth_token" }
 ## 🚧 Known Limitations & Roadmap
 
 - **Google Gemini SDK:** The project currently uses the `google-generativeai` SDK, which Google has recently deprecated in favour of `google-genai`. This does not affect current functionality, as the deprecated package remains fully operational. However, a migration to `google-genai` is planned for the near future to remain on the actively maintained SDK.
-- **Granular Authorisation:** All endpoints currently use a single shared `X-Stadium-Auth` token. Future iterations will introduce Role-Based Access Control (RBAC) to explicitly authenticate and differentiate permissions between standard fans, volunteers, and stadium staff.
 
 ---
 

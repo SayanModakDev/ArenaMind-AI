@@ -4,7 +4,9 @@ from pydantic import field_validator
 
 class Settings(BaseSettings):
     GEMINI_API_KEY: str
-    STADIUM_AUTH_TOKEN: str
+    FAN_AUTH_TOKEN: str
+    VOLUNTEER_AUTH_TOKEN: str
+    STAFF_AUTH_TOKEN: str
     ENVIRONMENT: str = "production"
     MAX_TOKENS: int = 500
     ALLOWED_ORIGINS: list[str] = ["http://localhost:8080"]

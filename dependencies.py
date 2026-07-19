@@ -6,6 +6,7 @@ dependencies used by route handlers. Lives outside main.py
 to break the circular import between main ↔ api.routes.
 """
 
+from schemas import UserRole
 from fastapi import HTTPException, Security, Request, status
 from fastapi.security import APIKeyHeader
 from slowapi import Limiter
@@ -18,14 +19,19 @@ from config import settings
 api_key_header = APIKeyHeader(name="X-Stadium-Auth")
 
 
-def verify_api_key(api_key: str = Security(api_key_header)):
-    """Validate the X-Stadium-Auth header against the configured token."""
-    if api_key != settings.STADIUM_AUTH_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing X-Stadium-Auth token",
-        )
-    return api_key
+def verify_api_key(api_key: str = Security(api_key_header)) -> UserRole:
+    """Validate the X-Stadium-Auth header against the configured tokens."""
+    if api_key == settings.FAN_AUTH_TOKEN:
+        return UserRole.FAN
+    elif api_key == settings.VOLUNTEER_AUTH_TOKEN:
+        return UserRole.VOLUNTEER
+    elif api_key == settings.STAFF_AUTH_TOKEN:
+        return UserRole.STAFF
+        
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing X-Stadium-Auth token",
+    )
 
 
 # ── Rate Limiting ───────────────────────────────────────────────────────

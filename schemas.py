@@ -32,10 +32,7 @@ class ContextSchema(BaseModel):
         default=False,
         description="When True, all routing MUST use ADA-compliant barrier-free paths.",
     )
-    user_role: UserRole = Field(
-        default=UserRole.FAN,
-        description="The role of the requester: FAN, VOLUNTEER, or STAFF.",
-    )
+
 
 class QueryRequest(BaseModel):
     """Inbound request payload for the AI operations endpoints."""

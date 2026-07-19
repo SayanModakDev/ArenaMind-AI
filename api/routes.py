@@ -3,14 +3,15 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 
 from agents.operational_brain import OperationalBrain
-from schemas import HealthResponse, QueryRequest, QueryResponse, ContextSchema
+from schemas import HealthResponse, QueryRequest, QueryResponse, ContextSchema, UserRole
+from fastapi import HTTPException, status
 from dependencies import verify_api_key, limiter, require_brain
 
 logger = logging.getLogger("arenamind")
 
 router: APIRouter = APIRouter()
 
-def _context_to_dict(ctx: ContextSchema) -> dict:
+def _context_to_dict(ctx: ContextSchema, resolved_role: UserRole) -> dict:
     """
     Convert the Pydantic ContextSchema into the flat dictionary
     expected by OperationalBrain's telemetry block builder.
@@ -23,7 +24,7 @@ def _context_to_dict(ctx: ContextSchema) -> dict:
         "venue_name": "FIFA World Cup 2026 Venue",
         "venue_id": "FWC26",
         "accessibility_required": ctx.accessibility_required,
-        "user_role": ctx.user_role.value if hasattr(ctx.user_role, 'value') else str(ctx.user_role),
+        "user_role": resolved_role.value if hasattr(resolved_role, 'value') else str(resolved_role),
     }
 
 @router.get(
@@ -52,13 +53,19 @@ async def operations_query(
     request: Request,
     payload: QueryRequest,
     active_brain: OperationalBrain = Depends(require_brain),
-    api_key: str = Depends(verify_api_key),
+    resolved_role: UserRole = Depends(verify_api_key),
 ) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
     the AI agent's full-text response in a single blocking call.
     """
-    context_dict = _context_to_dict(payload.context)
+    query_lower = payload.query.lower()
+    sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
+    if any(kw in query_lower for kw in sensitive_keywords):
+        if resolved_role != UserRole.STAFF:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
+
+    context_dict = _context_to_dict(payload.context, resolved_role)
 
     try:
         answer = await active_brain.generate_response(
@@ -69,7 +76,6 @@ async def operations_query(
 
     except Exception as exc:
         logger.error("generate_response failed: %s", exc, exc_info=True)
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI generation error: {exc}",
@@ -87,14 +93,20 @@ async def operations_stream(
     request: Request,
     payload: QueryRequest,
     active_brain: OperationalBrain = Depends(require_brain),
-    api_key: str = Depends(verify_api_key),
+    resolved_role: UserRole = Depends(verify_api_key),
 ) -> StreamingResponse:
     """
     Accepts a fan query and streams the AI agent's response as
     Server-Sent Events (SSE), optimising Time-to-First-Token for
     mobile and kiosk clients inside the stadium.
     """
-    context_dict = _context_to_dict(payload.context)
+    query_lower = payload.query.lower()
+    sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
+    if any(kw in query_lower for kw in sensitive_keywords):
+        if resolved_role != UserRole.STAFF:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
+
+    context_dict = _context_to_dict(payload.context, resolved_role)
 
     def _event_generator():
         """Yield SSE-formatted chunks from the Gemini stream."""
