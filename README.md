@@ -135,10 +135,11 @@ pip install -r requirements.txt
 
 ### Configuration (Security-First)
 
-Create a `.env` file in the project root. **API keys are never hardcoded** — they are loaded securely from the environment at runtime via `python-dotenv`.
+Create a `.env` file in the project root. **API keys are never hardcoded** — they are loaded securely from the environment at runtime via `python-dotenv` and strongly validated by `pydantic-settings`.
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+STADIUM_AUTH_TOKEN=your_secure_auth_token
 ```
 
 > ⚠️ The `.env` file is included in `.gitignore` and will never be committed to version control.
@@ -166,13 +167,13 @@ The repository includes a highly-optimised `Dockerfile` ready for Google Cloud R
 docker build -t arenamind-ai .
 
 # 2. Run the container locally
-docker run -p 8080:8080 -e GEMINI_API_KEY="your_api_key_here" arenamind-ai
+docker run -p 8080:8080 -e GEMINI_API_KEY="your_api_key_here" -e STADIUM_AUTH_TOKEN="your_secure_auth_token" arenamind-ai
 
 # 3. Deploy to Google Cloud Run
 gcloud run deploy arenamind-ai \
   --source . \
   --port 8080 \
-  --set-env-vars="GEMINI_API_KEY=your_api_key_here" \
+  --set-env-vars="GEMINI_API_KEY=your_api_key_here,STADIUM_AUTH_TOKEN=your_secure_auth_token" \
   --allow-unauthenticated
 ```
 
@@ -253,6 +254,7 @@ The following section maps each evaluation criterion to the specific implementat
   - **Authentication Integration:** Asserts endpoints correctly reject requests without `X-Stadium-Auth`.
   - **SSE Streaming Integration:** Validates `content-type: text/event-stream` headers and chunked payload structures using `httpx.AsyncClient`.
   - **Adversarial Fuzzing:** Verifies advanced injection payloads (e.g. base64 system prompt extraction) are handled gracefully without 500 crashes.
+- **Automated Accessibility Testing:** CI pipeline runs `axe-core` via GitHub Actions on the frontend bundle to strictly enforce WCAG AA compliance and prevent regressions on contrasting or missing aria-labels.
 - **Coverage:** CI enforces an 85% coverage threshold using `pytest-cov --cov-fail-under=85`.
 - **Mocked Gemini SDK:** Core tests run without a real API key — the SDK is patched before import for CI/CD compatibility.
 
@@ -280,15 +282,21 @@ The following section maps each evaluation criterion to the specific implementat
 
 ```json
 POST /api/v1/operations/query
-Headers: { "X-Stadium-Auth": "wc2026-ops-token" }
+Headers: { "X-Stadium-Auth": "your_secure_auth_token" }
 
 {
   "query": "Where is the nearest accessible restroom to Section 214?",
   "context": {
     "match_phase": "MATCH_TIME",
     "sector_id": "SEC-214",
-    "gate_4_congestion": "HIGH",
-    "restroom_b_status": "OPEN",
+    "gates": {
+      "GATE_4": "HIGH",
+      "GATE_7": "LOW"
+    },
+    "facilities": {
+      "RESTROOM_B": "OPEN",
+      "FIRST_AID_2": "STAFFED"
+    },
     "accessibility_required": true,
     "user_role": "FAN"
   }
