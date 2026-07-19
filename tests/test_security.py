@@ -19,7 +19,7 @@ def test_query_endpoint_missing_auth():
     # No X-Stadium-Auth header provided
     response = client.post("/api/v1/operations/query", json=payload)
     assert response.status_code == 401
-    assert response.json()["detail"] == "Not authenticated"
+    assert response.json()["detail"] == "Invalid or missing X-Stadium-Auth token"
 
 def test_stream_endpoint_missing_auth():
     payload = {
@@ -35,7 +35,7 @@ def test_stream_endpoint_missing_auth():
     # No X-Stadium-Auth header provided
     response = client.post("/api/v1/operations/stream", json=payload)
     assert response.status_code == 401
-    assert response.json()["detail"] == "Not authenticated"
+    assert response.json()["detail"] == "Invalid or missing X-Stadium-Auth token"
 
 
 
