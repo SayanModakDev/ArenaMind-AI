@@ -10,16 +10,14 @@ from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status, Request, Security
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from agents.operational_brain import OperationalBrain
 from config import settings
+from dependencies import limiter
 
 # ── Environment & Logging ───────────────────────────────────────────────
 load_dotenv()
@@ -63,21 +61,10 @@ async def security_and_audit_middleware(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
-api_key_header = APIKeyHeader(name="X-Stadium-Auth")
-
-def verify_api_key(api_key: str = Security(api_key_header)):
-    """Simple deterministic hardcoded token validation."""
-    if api_key != settings.STADIUM_AUTH_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing X-Stadium-Auth token",
-        )
-    return api_key
-
 # ── Static Files ────────────────────────────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-limiter = Limiter(key_func=get_remote_address)
+# ── Rate Limiter (from dependencies) ───────────────────────────────────
 app.state.limiter = limiter
 
 # ── Brain Instantiation (fail-safe) ────────────────────────────────────
@@ -95,6 +82,9 @@ except Exception as exc:
         "return 503 until resolved. Error: %s",
         exc,
     )
+
+# Store on app.state so route dependencies can access it via request.app
+app.state.brain = brain
 
 # ── Routers ─────────────────────────────────────────────────────────────
 from api.routes import router  # noqa: E402

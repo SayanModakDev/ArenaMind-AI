@@ -1,9 +1,10 @@
 import logging
-from fastapi import APIRouter, Request, Depends, HTTPException, status
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 
+from agents.operational_brain import OperationalBrain
 from schemas import HealthResponse, QueryRequest, QueryResponse, ContextSchema
-from main import verify_api_key, limiter
+from dependencies import verify_api_key, limiter, require_brain
 
 logger = logging.getLogger("arenamind")
 
@@ -25,22 +26,10 @@ def _context_to_dict(ctx: ContextSchema) -> dict:
         "user_role": ctx.user_role.value if hasattr(ctx.user_role, 'value') else str(ctx.user_role),
     }
 
-def _require_brain():
-    import main
-    if main.brain is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "AI engine is unavailable. Ensure GEMINI_API_KEY is "
-                "configured in the environment and restart the server."
-            ),
-        )
-    return main.brain
-
 @router.get(
     "/health",
     response_model=HealthResponse,
-    status_code=status.HTTP_200_OK,
+    status_code=200,
     tags=["Infrastructure"],
     summary="Liveness probe",
 )
@@ -54,17 +43,21 @@ async def health_check() -> HealthResponse:
 @router.post(
     "/api/v1/operations/query",
     response_model=QueryResponse,
-    status_code=status.HTTP_200_OK,
+    status_code=200,
     tags=["Operations"],
     summary="Synchronous AI query",
 )
 @limiter.limit("15/minute")
-async def operations_query(request: Request, payload: QueryRequest, api_key: str = Depends(verify_api_key)) -> QueryResponse:
+async def operations_query(
+    request: Request,
+    payload: QueryRequest,
+    active_brain: OperationalBrain = Depends(require_brain),
+    api_key: str = Depends(verify_api_key),
+) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
     the AI agent's full-text response in a single blocking call.
     """
-    active_brain = _require_brain()
     context_dict = _context_to_dict(payload.context)
 
     try:
@@ -76,6 +69,7 @@ async def operations_query(request: Request, payload: QueryRequest, api_key: str
 
     except Exception as exc:
         logger.error("generate_response failed: %s", exc, exc_info=True)
+        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI generation error: {exc}",
@@ -84,18 +78,22 @@ async def operations_query(request: Request, payload: QueryRequest, api_key: str
 
 @router.post(
     "/api/v1/operations/stream",
-    status_code=status.HTTP_200_OK,
+    status_code=200,
     tags=["Operations"],
     summary="Streaming AI query (SSE)",
 )
 @limiter.limit("15/minute")
-async def operations_stream(request: Request, payload: QueryRequest, api_key: str = Depends(verify_api_key)) -> StreamingResponse:
+async def operations_stream(
+    request: Request,
+    payload: QueryRequest,
+    active_brain: OperationalBrain = Depends(require_brain),
+    api_key: str = Depends(verify_api_key),
+) -> StreamingResponse:
     """
     Accepts a fan query and streams the AI agent's response as
     Server-Sent Events (SSE), optimising Time-to-First-Token for
     mobile and kiosk clients inside the stadium.
     """
-    active_brain = _require_brain()
     context_dict = _context_to_dict(payload.context)
 
     def _event_generator():
