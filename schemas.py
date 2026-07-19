@@ -20,13 +20,13 @@ class ContextSchema(BaseModel):
         default="SEC-101",
         description="The fan's assigned seating sector identifier.",
     )
-    gate_4_congestion: str = Field(
-        default="MODERATE",
-        description="Real-time congestion level at Gate 4: LOW | MODERATE | HIGH | CRITICAL.",
+    gates: dict[str, str] = Field(
+        default={"GATE_4": "MODERATE", "GATE_7": "LOW"},
+        description="Real-time congestion levels for all monitored gates.",
     )
-    restroom_b_status: str = Field(
-        default="OPEN",
-        description="Operational status of Restroom Block B: OPEN | CLOSED | MAINTENANCE.",
+    facilities: dict[str, str] = Field(
+        default={"RESTROOM_B": "OPEN", "FIRST_AID_2": "STAFFED"},
+        description="Operational status of venue facilities.",
     )
     accessibility_required: bool = Field(
         default=False,

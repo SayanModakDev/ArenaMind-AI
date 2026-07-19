@@ -17,12 +17,12 @@ def _context_to_dict(ctx: ContextSchema) -> dict:
     return {
         "current_phase": ctx.match_phase,
         "user_section": ctx.sector_id,
-        "crowd_density": ctx.gate_4_congestion,
+        "gates": ctx.gates,
+        "facilities": ctx.facilities,
         "venue_name": "FIFA World Cup 2026 Venue",
         "venue_id": "FWC26",
         "accessibility_required": ctx.accessibility_required,
-        "user_role": ctx.user_role.value,
-        "restroom_b_status": ctx.restroom_b_status,
+        "user_role": ctx.user_role.value if hasattr(ctx.user_role, 'value') else str(ctx.user_role),
     }
 
 def _require_brain():

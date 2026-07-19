@@ -60,8 +60,8 @@ def valid_payload() -> dict:
         "context": {
             "match_phase": "INGRESS",
             "sector_id": "SEC-214",
-            "gate_4_congestion": "HIGH",
-            "restroom_b_status": "OPEN",
+            "gates": {"GATE_4": "HIGH"},
+            "facilities": {"RESTROOM_B": "OPEN"},
             "accessibility_required": True,
             "user_role": "FAN",
         },
@@ -80,8 +80,8 @@ def injection_payload() -> dict:
         "context": {
             "match_phase": "MATCH_TIME",
             "sector_id": "SEC-101",
-            "gate_4_congestion": "LOW",
-            "restroom_b_status": "OPEN",
+            "gates": {"GATE_4": "LOW"},
+            "facilities": {"RESTROOM_B": "OPEN"},
             "accessibility_required": False,
             "user_role": "FAN",
         },
@@ -128,8 +128,8 @@ class TestInputValidation:
             "context": {
                 "match_phase": "INGRESS",
                 "sector_id": "SEC-101",
-                "gate_4_congestion": "MODERATE",
-                "restroom_b_status": "OPEN",
+                "gates": {"GATE_4": "MODERATE"},
+            "facilities": {"RESTROOM_B": "OPEN"},
                 "accessibility_required": False,
                 "user_role": "FAN",
             },

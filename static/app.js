@@ -119,8 +119,8 @@ async function executeQuery(event) {
         context: {
             match_phase:          matchPhaseSelect.value,
             sector_id:            "100",
-            gate_4_congestion:    "NORMAL",
-            restroom_b_status:    "OPERATIONAL",
+            gates:                { "GATE_4": "NORMAL", "GATE_7": "LOW" },
+            facilities:           { "RESTROOM_B": "OPERATIONAL", "FIRST_AID_2": "STAFFED" },
             accessibility_required: accessSelect.value === 'true',
             user_role:            "STAFF"
         }

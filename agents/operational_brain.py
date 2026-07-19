@@ -182,18 +182,27 @@ class OperationalBrain:
                 return "YES" if value else "NO"
             return str(value).strip() or default
 
-        return (
+        base = (
             "══════════════ LIVE STADIUM TELEMETRY ══════════════\n"
             f"  Match Phase          : {_get('current_phase')}\n"
             f"  Venue                : {_get('venue_name')} ({_get('venue_id')})\n"
             f"  Match ID             : {_get('match_id')}\n"
             f"  Fan Section          : {_get('user_section')}\n"
-            f"  Assigned Gate        : {_get('user_gate')}\n"
-            f"  Crowd Density        : {_get('crowd_density')}\n"
             f"  Accessibility Required: {_get('accessibility_required')}\n"
             f"  Timestamp (UTC)      : {_get('timestamp_utc')}\n"
-            "═══════════════════════════════════════════════════\n"
         )
+        gates = context_data.get("gates", {})
+        if gates:
+            for gate, status in gates.items():
+                base += f"  Gate {gate} Congestion : {status}\n"
+        
+        facilities = context_data.get("facilities", {})
+        if facilities:
+            for fac, status in facilities.items():
+                base += f"  Facility {fac} : {status}\n"
+                
+        base += "═══════════════════════════════════════════════════\n"
+        return base
 
     def _build_prompt(self, query: str, context_dict: Dict[str, Any]) -> str:
         """

@@ -9,8 +9,8 @@ def test_query_endpoint_missing_auth():
         "context": {
             "match_phase": "PRE_MATCH",
             "sector_id": "100",
-            "gate_4_congestion": "NORMAL",
-            "restroom_b_status": "OPERATIONAL",
+            "gates": {"GATE_4": "NORMAL"},
+            "facilities": {"RESTROOM_B": "OPERATIONAL"},
             "accessibility_required": False,
             "user_role": "STAFF"
         }
@@ -26,8 +26,8 @@ def test_stream_endpoint_missing_auth():
         "context": {
             "match_phase": "PRE_MATCH",
             "sector_id": "100",
-            "gate_4_congestion": "NORMAL",
-            "restroom_b_status": "OPERATIONAL",
+            "gates": {"GATE_4": "NORMAL"},
+            "facilities": {"RESTROOM_B": "OPERATIONAL"},
             "accessibility_required": False,
             "user_role": "STAFF"
         }
