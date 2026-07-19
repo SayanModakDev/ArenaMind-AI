@@ -12,6 +12,10 @@ import json
 import hashlib
 from typing import Any, Dict, Generator
 import asyncio
+import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
@@ -295,6 +299,7 @@ class OperationalBrain:
         self,
         query: str,
         context_dict: Dict[str, Any],
+        timeout: float = 15.0,
     ) -> Generator[str, None, None]:
         """
         Generate a streaming response from the Gemini model.
@@ -341,7 +346,12 @@ class OperationalBrain:
             # accessibility guardrail on the full text, then yield the
             # corrected result as a single event.
             full_text = ""
+            start_time = time.monotonic()
             for chunk in response_stream:
+                if time.monotonic() - start_time > timeout:
+                    logger.error("generate_stream timed out after %.1fs", timeout)
+                    yield "[ERROR] Response generation timed out. Please try again or contact venue staff."
+                    return
                 if chunk.parts:
                     full_text += chunk.text
 
@@ -349,7 +359,12 @@ class OperationalBrain:
             yield safe_text
         else:
             # ── Standard token-by-token streaming ──────────────────
+            start_time = time.monotonic()
             for chunk in response_stream:
+                if time.monotonic() - start_time > timeout:
+                    logger.error("generate_stream timed out after %.1fs", timeout)
+                    yield "[ERROR] Response generation timed out. Please try again or contact venue staff."
+                    return
                 if chunk.parts:
                     yield chunk.text
 

@@ -189,3 +189,43 @@ async def test_sse_stream_never_emits_non_compliant_chunks(monkeypatch):
             "Streamed response should have been overridden to suggest elevator/ramp"
         )
 
+@pytest.mark.anyio
+async def test_sse_streaming_timeout(monkeypatch):
+    """Verify that a slow stream generator breaks out and yields a timeout error."""
+    from unittest.mock import MagicMock
+    import agents.operational_brain
+
+    # Mock generator that yields multiple chunks so the loop runs
+    mock_chunk = MagicMock()
+    mock_chunk.parts = [MagicMock()]
+    mock_chunk.text = "Hello "
+
+    def mock_generate_content(prompt, stream=False):
+        yield mock_chunk
+        yield mock_chunk
+
+    brain = app.state.brain
+    monkeypatch.setattr(brain, "_model", MagicMock(generate_content=mock_generate_content))
+
+    # Mock time.monotonic to simulate time passing quickly
+    def mock_monotonic():
+        mock_monotonic.t += 10.0
+        return mock_monotonic.t
+    mock_monotonic.t = 0.0
+
+    monkeypatch.setattr(agents.operational_brain.time, "monotonic", mock_monotonic)
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/v1/operations/stream",
+            json={
+                "query": "Hello",
+                "context": {}
+            },
+            headers={"X-Stadium-Auth": os.environ["STADIUM_AUTH_TOKEN"]}
+        )
+        assert response.status_code == 200
+        
+        # Check that the error chunk was yielded
+        raw_body = response.text
+        assert "[ERROR] Response generation timed out" in raw_body
