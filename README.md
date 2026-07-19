@@ -223,7 +223,7 @@ The following section maps each evaluation criterion to the specific implementat
 - **Hackathon Directives:** Maximizes scores across all mandatory rubrics by focusing on resilient integration, enterprise safety, and inclusive UI.
 
 ### ✅ Code Quality
-- **Modular architecture:** Cleanly separated concerns — `agents/` (AI logic), `prompts/` (system instructions), `tests/` (validation), `static/` (frontend), `main.py` (API layer).
+- **Modular architecture:** Cleanly separated concerns — `agents/` (AI logic), `prompts/` (system instructions), `tests/` (validation), `static/` (frontend), `dependencies.py` (Dependency Injection for auth and rate-limiting), and `main.py` (API layer).
 - **Configuration Management:** Uses `pydantic-settings` to robustly manage environment variables (e.g. `GEMINI_API_KEY`) via a strongly-typed `config.py` module, raising dedicated `ConfigurationError` exceptions on failure.
 - **Custom Exceptions Hierarchy:** Implements a strict `ArenaMindError` base exception class with semantic subclasses like `ModelTimeoutError` for clean error boundaries.
 - **Pydantic schema validation:** All API inputs are validated through typed Pydantic models (`QueryRequest`, `ContextSchema`, `UserRole` enum) with field-level constraints (`min_length=2`, `max_length=1000`).
@@ -247,7 +247,8 @@ The following section maps each evaluation criterion to the specific implementat
 - **SSE streaming endpoint** (`/api/v1/operations/stream`): Yields text chunks via Server-Sent Events as they arrive from Gemini, optimising Time-to-First-Token for mobile clients.
 - **Gemini 3.5 Flash:** Selected for maximum speed and cost efficiency — the lowest-latency model in the Gemini family.
 - **Response Caching:** Identical queries are served instantly without hitting the Gemini API using an `@alru_cache(maxsize=200)` asynchronous cache pool.
-- **Circuit Breakers:** The LLM generation logic is wrapped in a strict `asyncio.wait_for(..., timeout=8.0)` circuit breaker to prevent cascading failures if the external API hangs.
+- **Circuit Breakers & Timeouts:** The LLM generation logic uses strict bounds to prevent cascading failures if the external API hangs: `asyncio.wait_for(..., timeout=8.0)` for blocking queries, and a custom `time.monotonic()` loop validator with a 15-second abort threshold for SSE streams.
+- **Cost & Latency Ceilings:** The model is instantiated with a hard `GenerationConfig(max_output_tokens=...)` limit to guarantee bounded backend resource usage per request, complementing the soft 150-word prompt guidance.
 - **Payload Compression:** FastAPI `GZipMiddleware` ensures that large JSON and SSE payloads are heavily compressed before being transmitted over stadium Wi-Fi.
 - **Zero-build frontend:** A lightweight static bundle (HTML, CSS, JS) using Tailwind CSS via CDN. No build step, no bundler, no node_modules. Loads instantly on stadium Wi-Fi.
 - **Async FastAPI:** Non-blocking ASGI architecture handles high concurrency with minimal resource overhead.
@@ -265,7 +266,7 @@ The following section maps each evaluation criterion to the specific implementat
 
 ### ♿ Accessibility
 - **High-Contrast UI Toggle:** A dedicated accessibility toggle strictly enforces WCAG-compliant high-contrast colors (pure black/white) to ensure absolute legibility in bright outdoor stadium conditions.
-- **ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) and a deterministic post-generation guardrail (`_enforce_accessibility`) enforce barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs and escalators are strictly blocked via hardcoded overrides.
+- **Preventive ADA-compliant routing logic:** The core agent system prompt (§2 Accessibility Manifest) and a deterministic post-generation guardrail (`_enforce_accessibility`) enforce barrier-free paths when `accessibility_required=True`. Elevators and ramps are mandatory; stairs and escalators are strictly blocked via hardcoded overrides. For streaming requests, this guardrail is **preventive**—the stream is buffered internally and validated before yielding a single SSE chunk, ensuring wheelchair users never see non-compliant text flash on screen.
 - **Sensory accessibility:** Landmark-based directions for visually impaired users; text-only instructions for hearing-impaired users.
 - **Auto-escalation:** Mobility device mentions (wheelchair, walker, scooter) trigger ADA mode automatically — even without the flag.
 - **Mobile-responsive UI:** The Tailwind CSS frontend is strictly mobile-first (`grid-cols-1 lg:grid-cols-12`), with responsive breakpoints, `viewport-fit=cover` for notched phones, `touch-action: manipulation` for zero tap delay, and 48dp minimum touch targets per Google's accessibility guidelines.
