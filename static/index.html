@@ -217,6 +217,7 @@
                         <!-- Execute Button -->
                         <button
                             id="executeBtn"
+                            aria-label="Execute Query"
                             type="button"
                             onclick="executeQuery()"
                             class="focus-ring group relative w-full flex items-center justify-center gap-2.5 px-6 py-3.5 sm:py-3.5 min-h-[48px] rounded-xl bg-gradient-to-r from-arena-600 to-arena-700 hover:from-arena-500 hover:to-arena-600 text-white font-semibold text-sm tracking-wide shadow-lg shadow-arena-900/40 hover:shadow-arena-800/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 overflow-hidden"
@@ -249,16 +250,16 @@
                         Quick Queries
                     </h3>
                     <div class="grid grid-cols-1 gap-2">
-                        <button onclick="setQuery('What is the fastest route to Gate 4?')" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
+                        <button onclick="setQuery('What is the fastest route to Gate 4?')" aria-label="Quick Query: What is the fastest route to Gate 4?" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
                             → What is the fastest route to Gate 4?
                         </button>
-                        <button onclick="setQuery('Where is the nearest accessible restroom to Section 214?')" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
+                        <button onclick="setQuery('Where is the nearest accessible restroom to Section 214?')" aria-label="Quick Query: Where is the nearest accessible restroom to Section 214?" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
                             → Nearest accessible restroom to Section 214?
                         </button>
-                        <button onclick="setQuery('Current congestion levels at all entry gates?')" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
+                        <button onclick="setQuery('Current congestion levels at all entry gates?')" aria-label="Quick Query: Current congestion levels at all entry gates?" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-arena-700/30 text-xs text-gray-400 hover:text-gray-200 transition-all font-mono truncate">
                             → Current congestion levels at all entry gates?
                         </button>
-                        <button onclick="setQuery('Emergency: Medical assistance needed in Section 305')" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-cyber-red/30 text-xs text-gray-400 hover:text-red-300 transition-all font-mono truncate">
+                        <button onclick="setQuery('Emergency: Medical assistance needed in Section 305')" aria-label="Quick Query: Emergency Medical assistance needed in Section 305" class="text-left px-3.5 py-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/40 hover:border-cyber-red/30 text-xs text-gray-400 hover:text-red-300 transition-all font-mono truncate">
                             → 🚨 Medical assistance needed in Section 305
                         </button>
                     </div>

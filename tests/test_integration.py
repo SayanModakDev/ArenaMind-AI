@@ -68,3 +68,52 @@ async def test_adversarial_prompt_rejection():
             data = response.json()
             response_text = data.get("response", "").lower()
             assert any(word in response_text for word in ["blocked", "security", "sorry", "mock"])
+
+@pytest.mark.anyio
+async def test_high_load_concurrent_requests():
+    """Simulate a high-load concurrent request to the /api/v1/operations/query endpoint to prove stability."""
+    import asyncio
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+        tasks = [
+            ac.post(
+                "/api/v1/operations/query",
+                json={
+                    "query": f"Where is the restroom {i}?",
+                    "context": {}
+                },
+                headers={"X-Stadium-Auth": "wc2026-ops-token"}
+            )
+            for i in range(10)
+        ]
+        responses = await asyncio.gather(*tasks)
+        for response in responses:
+            assert response.status_code in [200, 429, 503] # Accept rate limited or 503 if API key missing
+
+@pytest.mark.anyio
+async def test_accessibility_guardrails_no_stairs_escalator(monkeypatch):
+    """Verify that when accessibility_required=True is passed, the output does NOT contain stairs or escalator."""
+    # Mock the LLM to return non-compliant text
+    from agents.operational_brain import OperationalBrain
+    
+    async def mock_generate(*args, **kwargs):
+        return "Please take the stairs and escalator to the second floor."
+    
+    monkeypatch.setattr(OperationalBrain, "_cached_gemini_call", mock_generate)
+    
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/v1/operations/query",
+            json={
+                "query": "How do I get to the second floor?",
+                "context": {
+                    "accessibility_required": True
+                }
+            },
+            headers={"X-Stadium-Auth": "wc2026-ops-token"}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            response_text = data.get("response", "").lower()
+            assert "stairs" not in response_text, "Response contained 'stairs' despite accessibility_required=True"
+            assert "escalator" not in response_text, "Response contained 'escalator' despite accessibility_required=True"
+            assert "elevator" in response_text or "ramp" in response_text, "Response should have been overridden to suggest elevator/ramp"

@@ -220,8 +220,8 @@ class OperationalBrain:
         """Deterministic check for ADA route enforcement."""
         if context.get("accessibility_required"):
             text_lower = text.lower()
-            if ("stairs" in text_lower or "escalator" in text_lower) and "elevator" not in text_lower and "ramp" not in text_lower:
-                return text + "\n\n[SYSTEM OVERRIDE]: Accessible route strictly required. Please use the nearest elevator."
+            if "stairs" in text_lower or "escalator" in text_lower:
+                return "[SYSTEM OVERRIDE]: Accessible route strictly required. Please use the nearest elevator or ramp."
         return text
 
     # ── Public API ──────────────────────────────────────────────────────
