@@ -112,9 +112,9 @@ async function executeQuery(event) {
         return;
     }
 
-    const tokenInput = document.getElementById('authToken');
-    const userToken = tokenInput ? tokenInput.value.trim() : '';
-    const authToken = userToken || "wc2026-ops-token";
+    const tokenElement = document.getElementById('authToken') || document.getElementById('auth-token-input') || document.getElementById('auth-token');
+    const tokenInput = tokenElement ? tokenElement.value : '';
+    const authToken = tokenInput && tokenInput.trim() !== "" ? tokenInput.trim() : "wc2026-ops-token";
 
     // Build payload matching the API schema exactly
     const selectedLanguage = languageSim ? languageSim.value : 'English';
