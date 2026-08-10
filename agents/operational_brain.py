@@ -349,6 +349,7 @@ class OperationalBrain:
                     logger.error("generate_stream timed out after %.1fs", timeout)
                     yield "[ERROR] Response generation timed out. Please try again or contact venue staff."
                     return
+                start_time = time.monotonic()
                 if chunk.parts:
                     full_text += chunk.text
 
@@ -362,5 +363,6 @@ class OperationalBrain:
                     logger.error("generate_stream timed out after %.1fs", timeout)
                     yield "[ERROR] Response generation timed out. Please try again or contact venue staff."
                     return
+                start_time = time.monotonic()
                 if chunk.parts:
                     yield chunk.text

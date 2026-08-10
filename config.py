@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     VOLUNTEER_AUTH_TOKEN: str
     STAFF_AUTH_TOKEN: str
     ENVIRONMENT: str = "production"
-    MAX_TOKENS: int = 500
+    MAX_TOKENS: int = 4096
     ALLOWED_ORIGINS: list[str] = ["http://localhost:8080"]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
