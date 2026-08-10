@@ -23,27 +23,26 @@ from fastapi.testclient import TestClient
 
 # Patch the Gemini SDK *before* the app module is imported, so the
 # OperationalBrain constructor never makes a real API call.
-with patch("google.generativeai.configure"):
-    with patch(
-        "google.generativeai.GenerativeModel"
-    ) as MockModel:
-        # Create a mock model instance that returns a canned response
-        # for both blocking and streaming generation.
-        mock_model_instance = MagicMock()
+with patch("google.generativeai.configure"), patch(
+    "google.generativeai.GenerativeModel"
+) as MockModel:
+    # Create a mock model instance that returns a canned response
+    # for both blocking and streaming generation.
+    mock_model_instance = MagicMock()
 
-        # Mock blocking response
-        mock_response = MagicMock()
-        mock_response.parts = [MagicMock()]
-        mock_response.text = "This is a mock AI response for testing."
-        mock_model_instance.generate_content.return_value = mock_response
+    # Mock blocking response
+    mock_response = MagicMock()
+    mock_response.parts = [MagicMock()]
+    mock_response.text = "This is a mock AI response for testing."
+    mock_model_instance.generate_content.return_value = mock_response
 
-        async def mock_async_call(*args, **kwargs):
-            return mock_response
-        mock_model_instance.generate_content_async = mock_async_call
+    async def mock_async_call(*args, **kwargs):
+        return mock_response
+    mock_model_instance.generate_content_async = mock_async_call
 
-        MockModel.return_value = mock_model_instance
+    MockModel.return_value = mock_model_instance
 
-        from main import app  # noqa: E402
+    from main import app
 
 client = TestClient(app)
 
@@ -242,9 +241,10 @@ class TestModelConfig:
         Verify that OperationalBrain configures the GenerativeModel with a 
         generation_config that caps max_output_tokens to settings.MAX_TOKENS.
         """
+        from unittest.mock import patch
+
         from agents.operational_brain import OperationalBrain
         from config import settings
-        from unittest.mock import patch
         
         # Patch the GenerativeModel class inside operational_brain so we can 
         # intercept the call and inspect its arguments without making a real API call.

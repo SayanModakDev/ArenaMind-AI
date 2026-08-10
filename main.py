@@ -6,14 +6,13 @@ HTTP API for the FIFA World Cup 2026 stadium operations platform.
 """
 
 import logging
-from typing import Optional
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from agents.operational_brain import OperationalBrain
 from config import settings
@@ -72,7 +71,7 @@ app.state.limiter = limiter
 # Wrapped in a try/except so the server can still boot in CI/CD
 # environments where GEMINI_API_KEY may not be configured. Endpoints
 # that require the brain will return a clear 503 when it is unavailable.
-brain: Optional[OperationalBrain] = None
+brain: OperationalBrain | None = None
 
 try:
     brain = OperationalBrain()
@@ -88,7 +87,8 @@ except ConfigurationError as exc:
 app.state.brain = brain
 
 # ── Routers ─────────────────────────────────────────────────────────────
-from api.routes import router  # noqa: E402
+from api.routes import router
+
 app.include_router(router)
 
 # ═════════════════════════════════════════════════════════════════════════

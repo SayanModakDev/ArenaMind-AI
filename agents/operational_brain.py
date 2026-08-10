@@ -7,21 +7,22 @@ settings, prompt-injection defences, and real-time telemetry injection
 for live FIFA World Cup 2026 venue operations.
 """
 
-import re
-import json
-import hashlib
-from typing import Any, Dict, Generator
 import asyncio
-import time
+import hashlib
+import json
 import logging
+import re
+import time
+from collections.abc import Generator
+from typing import Any
 
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from async_lru import alru_cache
+from google.generativeai.types import HarmBlockThreshold, HarmCategory
 
-from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
-from exceptions import ModelTimeoutError, ConfigurationError
 from config import settings
+from exceptions import ConfigurationError, ModelTimeoutError
+from prompts.templates import STADIUM_SYSTEM_INSTRUCTION
 
 logger = logging.getLogger(__name__)
 
@@ -46,34 +47,30 @@ class OperationalBrain:
     # Compiled once at class level for performance. Each pattern targets
     # a well-known injection vector observed in adversarial LLM research.
     _INJECTION_PATTERNS: re.Pattern = re.compile(
-        r"|".join(
-            [
-                r"ignore\s+(all\s+)?previous\s+instructions",
-                r"ignore\s+(all\s+)?prior\s+instructions",
-                r"ignore\s+(all\s+)?above\s+instructions",
-                r"disregard\s+(all\s+)?(previous|prior|above)\s+instructions",
-                r"forget\s+(all\s+)?(previous|prior|above)\s+(instructions|rules|context)",
-                r"override\s+(system|safety|security)\s+(prompt|instructions|rules|settings)",
-                r"you\s+are\s+now\s+(a|an|in)\s+(unrestricted|jailbreak|developer|admin)",
-                r"enter\s+(developer|admin|debug|maintenance)\s+mode",
-                r"switch\s+to\s+(developer|admin|unrestricted|unfiltered)\s+mode",
-                r"act\s+as\s+(a\s+)?(system\s+)?(admin|administrator|root|superuser)",
-                r"pretend\s+(you\s+)?(are|have)\s+no\s+(restrictions|rules|limits|filters)",
-                r"reveal\s+(your|the)\s+(system\s+)?(prompt|instructions|configuration|rules)",
-                r"show\s+(me\s+)?(your|the)\s+(system\s+)?(prompt|instructions)",
-                r"print\s+(your|the)\s+(system\s+)?(prompt|instructions)",
-                r"output\s+(your|the)\s+(system\s+)?(prompt|instructions)",
-                r"repeat\s+(your|the)\s+(system\s+)?(prompt|instructions)\s+verbatim",
-                r"what\s+(are|is)\s+your\s+(system\s+)?(prompt|instructions|rules)",
-                r"\bDAN\b",
-                r"do\s+anything\s+now",
-                r"jailbreak",
-                r"\[\s*SYSTEM\s*\]",
-                r"\[\s*INST\s*\]",
-                r"<\s*\|?\s*system\s*\|?\s*>",
-                r"###\s*(SYSTEM|INSTRUCTION|OVERRIDE)",
-            ]
-        ),
+        r"ignore\s+(all\s+)?previous\s+instructions|"
+        r"ignore\s+(all\s+)?prior\s+instructions|"
+        r"ignore\s+(all\s+)?above\s+instructions|"
+        r"disregard\s+(all\s+)?(previous|prior|above)\s+instructions|"
+        r"forget\s+(all\s+)?(previous|prior|above)\s+(instructions|rules|context)|"
+        r"override\s+(system|safety|security)\s+(prompt|instructions|rules|settings)|"
+        r"you\s+are\s+now\s+(a|an|in)\s+(unrestricted|jailbreak|developer|admin)|"
+        r"enter\s+(developer|admin|debug|maintenance)\s+mode|"
+        r"switch\s+to\s+(developer|admin|unrestricted|unfiltered)\s+mode|"
+        r"act\s+as\s+(a\s+)?(system\s+)?(admin|administrator|root|superuser)|"
+        r"pretend\s+(you\s+)?(are|have)\s+no\s+(restrictions|rules|limits|filters)|"
+        r"reveal\s+(your|the)\s+(system\s+)?(prompt|instructions|configuration|rules)|"
+        r"show\s+(me\s+)?(your|the)\s+(system\s+)?(prompt|instructions)|"
+        r"print\s+(your|the)\s+(system\s+)?(prompt|instructions)|"
+        r"output\s+(your|the)\s+(system\s+)?(prompt|instructions)|"
+        r"repeat\s+(your|the)\s+(system\s+)?(prompt|instructions)\s+verbatim|"
+        r"what\s+(are|is)\s+your\s+(system\s+)?(prompt|instructions|rules)|"
+        r"\bDAN\b|"
+        r"do\s+anything\s+now|"
+        r"jailbreak|"
+        r"\[\s*SYSTEM\s*\]|"
+        r"\[\s*INST\s*\]|"
+        r"<\s*\|?\s*system\s*\|?\s*>|"
+        r"###\s*(SYSTEM|INSTRUCTION|OVERRIDE)",
         re.IGNORECASE,
     )
 
@@ -100,7 +97,7 @@ class OperationalBrain:
         # ── 2. Enterprise Safety Settings ───────────────────────────────
         # Block medium-and-above probability content across all harm
         # categories to enforce a family-friendly, stadium-safe output.
-        self._safety_settings: Dict[Any, Any] = {
+        self._safety_settings: dict[Any, Any] = {
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
@@ -215,7 +212,7 @@ class OperationalBrain:
         base += "═══════════════════════════════════════════════════\n"
         return base
 
-    def _build_prompt(self, query: str, context_dict: Dict[str, Any]) -> str:
+    def _build_prompt(self, query: str, context_dict: dict[str, Any]) -> str:
         """
         Assemble the final prompt from sanitised user input and
         live telemetry data.
@@ -268,7 +265,7 @@ class OperationalBrain:
     async def generate_response(
         self,
         query: str,
-        context_dict: Dict[str, Any],
+        context_dict: dict[str, Any],
     ) -> str:
         """
         Generate a complete (blocking/cached) response from the Gemini model.
@@ -298,7 +295,7 @@ class OperationalBrain:
     def generate_stream(
         self,
         query: str,
-        context_dict: Dict[str, Any],
+        context_dict: dict[str, Any],
         timeout: float = 15.0,
     ) -> Generator[str, None, None]:
         """
@@ -367,4 +364,3 @@ class OperationalBrain:
                     return
                 if chunk.parts:
                     yield chunk.text
-

@@ -1,8 +1,9 @@
 from PIL import Image
 
+
 def main():
     img = Image.open('static/logo.png').convert("RGBA")
-    width, height = img.size
+    _, height = img.size
     
     # The image was already cropped vertically, making it 1019x422.
     # The logo icon is typically on the left side, occupying a square area matching the height.
