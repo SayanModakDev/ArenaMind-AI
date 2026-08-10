@@ -1,9 +1,4 @@
-"""
-ArenaMind-AI — FastAPI Application Entry Point
-================================================
-Exposes the operational intelligence engine as a high-performance async
-HTTP API for the FIFA World Cup 2026 stadium operations platform.
-"""
+from __future__ import annotations
 
 import logging
 
@@ -90,9 +85,7 @@ app.state.limiter = limiter
 # Wrapped in a try/except so the server can still boot in CI/CD
 # environments where GEMINI_API_KEY may not be configured. Endpoints
 # that require the brain will return a clear 503 when it is unavailable.
-from typing import Optional
-
-brain: Optional[OperationalBrain] = None
+brain: OperationalBrain | None = None
 
 try:
     brain = OperationalBrain()

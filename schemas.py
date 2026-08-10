@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -39,16 +41,16 @@ class ContextSchema(BaseModel):
 
 class QueryRequest(BaseModel):
     """Inbound request payload for the AI operations endpoints."""
-    query: Optional[str] = Field(
+    query: str | None = Field(
         default="Where is the nearest accessible restroom to Section 214?",
         description="The fan's natural-language question (0–1000 characters).",
         examples=["Where is the nearest accessible restroom to Section 214?"],
     )
-    user_role: Optional[str] = Field(
+    user_role: str | None = Field(
         default="fan",
         description="Optional user role string for public demo evaluation.",
     )
-    context: Optional[ContextSchema] = Field(
+    context: ContextSchema | None = Field(
         default_factory=ContextSchema,
         description="Live stadium telemetry context for the query.",
     )
