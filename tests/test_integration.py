@@ -192,6 +192,7 @@ async def test_sse_stream_never_emits_non_compliant_chunks(monkeypatch):
 async def test_sse_streaming_timeout(monkeypatch):
     """Verify that a slow stream generator breaks out and yields a timeout error."""
     from unittest.mock import MagicMock
+
     import agents.operational_brain
 
     # Mock generator that yields multiple chunks so the loop runs

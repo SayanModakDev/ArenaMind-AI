@@ -1,5 +1,6 @@
 import os
 from locust import HttpUser, task, between
+import requests
 
 class ArenaMindUser(HttpUser):
     # Simulate realistic fan think-time (1-5 seconds between requests)
@@ -58,7 +59,7 @@ class ArenaMindUser(HttpUser):
                     for _ in response.iter_lines():
                         pass
                     response.success()
-                except Exception as e:
+                except requests.exceptions.RequestException as e:
                     response.failure(f"Stream interrupted: {e}")
             elif response.status_code == 429:
                 response.success() # Rate limiting is expected

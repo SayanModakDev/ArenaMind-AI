@@ -18,6 +18,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from agents.operational_brain import OperationalBrain
 from config import settings
 from dependencies import limiter
+from exceptions import ConfigurationError
 
 # ── Environment & Logging ───────────────────────────────────────────────
 load_dotenv()
@@ -76,7 +77,7 @@ brain: Optional[OperationalBrain] = None
 try:
     brain = OperationalBrain()
     logger.info("OperationalBrain initialised successfully.")
-except Exception as exc:
+except ConfigurationError as exc:
     logger.warning(
         "OperationalBrain failed to initialise — AI endpoints will "
         "return 503 until resolved. Error: %s",

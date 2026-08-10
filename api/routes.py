@@ -61,9 +61,8 @@ async def operations_query(
     """
     query_lower = payload.query.lower()
     sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
-    if any(kw in query_lower for kw in sensitive_keywords):
-        if resolved_role != UserRole.STAFF:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
+    if any(kw in query_lower for kw in sensitive_keywords) and resolved_role != UserRole.STAFF:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
 
     context_dict = _context_to_dict(payload.context, resolved_role)
 
@@ -75,7 +74,7 @@ async def operations_query(
         return QueryResponse(status="success", response=answer)
 
     except Exception as exc:
-        logger.error("generate_response failed: %s", exc, exc_info=True)
+        logger.exception("generate_response failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI generation error: {exc}",
@@ -102,9 +101,8 @@ async def operations_stream(
     """
     query_lower = payload.query.lower()
     sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
-    if any(kw in query_lower for kw in sensitive_keywords):
-        if resolved_role != UserRole.STAFF:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
+    if any(kw in query_lower for kw in sensitive_keywords) and resolved_role != UserRole.STAFF:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
 
     context_dict = _context_to_dict(payload.context, resolved_role)
 
@@ -119,7 +117,7 @@ async def operations_stream(
             # Signal end-of-stream to the client.
             yield "data: [DONE]\n\n"
         except Exception as exc:
-            logger.error("generate_stream failed: %s", exc, exc_info=True)
+            logger.exception("generate_stream failed: %s", exc)
             yield "data: [ERROR] An internal server error occurred during the stream.\n\n"
 
     return StreamingResponse(
