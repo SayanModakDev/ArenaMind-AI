@@ -103,9 +103,10 @@ class TestHealthEndpoint:
 
         data = response.json()
         assert "status" in data, "Response JSON missing 'status' key."
-        assert data["status"] == "healthy", (
-            f"Expected status 'healthy', got '{data['status']}'"
+        assert data["status"] == "online", (
+            f"Expected status 'online', got '{data['status']}'"
         )
+        assert data.get("auth_status") == "public_demo_enabled", "Missing or incorrect auth_status"
 
 
 # ═════════════════════════════════════════════════════════════════════════

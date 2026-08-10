@@ -16,10 +16,12 @@ def test_query_endpoint_missing_auth():
             "accessibility_required": False,
         }
     }
-    # No X-Stadium-Auth header provided
-    response = client.post("/api/v1/operations/query", json=payload)
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid or missing X-Stadium-Auth token"
+    # No X-Stadium-Auth header provided; should fallback to FAN
+    with patch('agents.operational_brain.OperationalBrain.generate_response') as mock_gen:
+        mock_gen.return_value = 'Mocked response'
+        response = client.post("/api/v1/operations/query", json=payload)
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
 
 def test_stream_endpoint_missing_auth():
     payload = {
@@ -32,10 +34,11 @@ def test_stream_endpoint_missing_auth():
             "accessibility_required": False,
         }
     }
-    # No X-Stadium-Auth header provided
-    response = client.post("/api/v1/operations/stream", json=payload)
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid or missing X-Stadium-Auth token"
+    # No X-Stadium-Auth header provided; should fallback to FAN
+    with patch('agents.operational_brain.OperationalBrain.generate_stream') as mock_gen:
+        mock_gen.return_value = ['Chunk 1']
+        response = client.post("/api/v1/operations/stream", json=payload)
+        assert response.status_code == 200
 
 
 

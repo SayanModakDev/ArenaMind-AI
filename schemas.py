@@ -56,3 +56,5 @@ class QueryResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Response schema for the health-check endpoint."""
     status: str = Field(default="healthy", description="Service health status.")
+    service: str = Field(default="ArenaMind AI", description="Service name.")
+    auth_status: str = Field(default="public_demo_enabled", description="Current authentication mode.")
