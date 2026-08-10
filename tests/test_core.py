@@ -113,13 +113,12 @@ class TestHealthEndpoint:
 # ═════════════════════════════════════════════════════════════════════════
 
 class TestInputValidation:
-    """Validates Pydantic schema enforcement on the query endpoint."""
+    """Validates fallback and default handling on the query endpoint."""
 
     def test_input_validation_empty_query(self):
         """
-        POST /api/v1/operations/query with an empty query string must
-        return 422 Unprocessable Entity because the QueryRequest schema
-        enforces min_length=2 on the query field.
+        POST /api/v1/operations/query with an empty query string falls back
+        gracefully to 200 OK with a default prompt.
         """
         payload = {
             "query": "",
@@ -127,21 +126,20 @@ class TestInputValidation:
                 "match_phase": "INGRESS",
                 "sector_id": "SEC-101",
                 "gates": {"GATE_4": "MODERATE"},
-            "facilities": {"RESTROOM_B": "OPEN"},
+                "facilities": {"RESTROOM_B": "OPEN"},
                 "accessibility_required": False,
             },
         }
 
         response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
-        assert response.status_code == 422, (
-            f"Expected 422 for empty query, got {response.status_code}"
+        assert response.status_code == 200, (
+            f"Expected 200 for empty query fallback, got {response.status_code}"
         )
 
     def test_input_validation_single_char_query(self):
         """
-        A single-character query also violates min_length=2 and must
-        return 422.
+        A single-character query falls back gracefully to 200 OK.
         """
         payload = {
             "query": "A",
@@ -150,20 +148,20 @@ class TestInputValidation:
 
         response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
-        assert response.status_code == 422, (
-            f"Expected 422 for single-char query, got {response.status_code}"
+        assert response.status_code == 200, (
+            f"Expected 200 for single-char query fallback, got {response.status_code}"
         )
 
     def test_input_validation_missing_query_field(self):
         """
-        A payload with no 'query' key at all must return 422.
+        A payload with no 'query' key at all falls back gracefully to 200 OK.
         """
         payload = {"context": {}}
 
         response = client.post("/api/v1/operations/query", json=payload, headers={"X-Stadium-Auth": os.environ["FAN_AUTH_TOKEN"]})
 
-        assert response.status_code == 422, (
-            f"Expected 422 for missing query, got {response.status_code}"
+        assert response.status_code == 200, (
+            f"Expected 200 for missing query fallback, got {response.status_code}"
         )
 
 

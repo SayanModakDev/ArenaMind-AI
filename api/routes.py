@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse, StreamingResponse
 
 from agents.operational_brain import OperationalBrain
@@ -52,7 +52,7 @@ async def health_check() -> HealthResponse:
 @limiter.limit("15/minute")
 async def operations_query(
     request: Request,
-    payload: QueryRequest,
+    payload: Annotated[QueryRequest, Body(default_factory=QueryRequest)],
     active_brain: Annotated[OperationalBrain, Depends(require_brain)],
     resolved_role: Annotated[UserRole, Depends(verify_api_key)],
 ) -> QueryResponse:
@@ -91,7 +91,7 @@ async def operations_query(
 @limiter.limit("15/minute")
 async def operations_stream(
     request: Request,
-    payload: QueryRequest,
+    payload: Annotated[QueryRequest, Body(default_factory=QueryRequest)],
     active_brain: Annotated[OperationalBrain, Depends(require_brain)],
     resolved_role: Annotated[UserRole, Depends(verify_api_key)],
 ) -> StreamingResponse:

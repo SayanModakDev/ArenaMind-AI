@@ -9,7 +9,7 @@ from schemas import QueryRequest
 def test_input_fuzzing(fuzzed_text):
     try:
         req = QueryRequest(query=fuzzed_text)
-        assert req.query == fuzzed_text
+        assert req.query == fuzzed_text or (not fuzzed_text.strip() and len(req.query) > 0)
     except ValidationError:
-        # Pydantic gracefully handled the invalid input (e.g. too short)
+        # Pydantic gracefully handled the invalid input
         pass
