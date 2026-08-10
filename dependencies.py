@@ -1,10 +1,6 @@
-"""
-ArenaMind-AI — Shared Dependencies
-====================================
-Provides authentication, rate-limiting, and brain-access
-dependencies used by route handlers. Lives outside main.py
-to break the circular import between main ↔ api.routes.
-"""
+from __future__ import annotations
+
+import logging
 
 from fastapi import HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
@@ -15,26 +11,26 @@ from agents.operational_brain import OperationalBrain
 from config import settings
 from schemas import UserRole
 
+logger = logging.getLogger("arenamind")
+
 # ── Authentication ──────────────────────────────────────────────────────
 api_key_header = APIKeyHeader(name="X-Stadium-Auth", auto_error=False)
 
 
-def verify_api_key(api_key: str = Security(api_key_header)) -> UserRole:
-    """Validate the X-Stadium-Auth header against the configured tokens. Fallback to public demo mode if missing."""
+def verify_api_key(api_key: str | None = Security(api_key_header)) -> UserRole:
+    """Validate the X-Stadium-Auth header against the configured tokens. Fallback to public demo mode if missing or invalid."""
     if not api_key:
         return UserRole.FAN  # Public unauthenticated fallback for Hack2Skill evaluators
-        
+
     if api_key == settings.FAN_AUTH_TOKEN:
         return UserRole.FAN
     elif api_key == settings.VOLUNTEER_AUTH_TOKEN:
         return UserRole.VOLUNTEER
     elif api_key == settings.STAFF_AUTH_TOKEN:
         return UserRole.STAFF
-        
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or missing X-Stadium-Auth token",
-    )
+
+    logger.warning("Unrecognised X-Stadium-Auth token '%s'. Falling back to public FAN role.", api_key)
+    return UserRole.FAN
 
 
 # ── Rate Limiting ───────────────────────────────────────────────────────
