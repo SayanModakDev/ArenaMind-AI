@@ -1,6 +1,6 @@
 import os
 
-import requests
+import requests  # type: ignore[import-untyped]
 from locust import HttpUser, between, task
 
 

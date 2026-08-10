@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import Annotated
 
@@ -12,19 +14,20 @@ logger = logging.getLogger("arenamind")
 
 router: APIRouter = APIRouter()
 
-def _context_to_dict(ctx: ContextSchema, resolved_role: UserRole) -> dict:
+def _context_to_dict(ctx: ContextSchema | None, resolved_role: UserRole) -> dict:
     """
     Convert the Pydantic ContextSchema into the flat dictionary
     expected by OperationalBrain's telemetry block builder.
     """
+    safe_ctx = ctx or ContextSchema()
     return {
-        "current_phase": ctx.match_phase,
-        "user_section": ctx.sector_id,
-        "gates": ctx.gates,
-        "facilities": ctx.facilities,
+        "current_phase": safe_ctx.match_phase,
+        "user_section": safe_ctx.sector_id,
+        "gates": safe_ctx.gates,
+        "facilities": safe_ctx.facilities,
         "venue_name": "FIFA World Cup 2026 Venue",
         "venue_id": "FWC26",
-        "accessibility_required": ctx.accessibility_required,
+        "accessibility_required": safe_ctx.accessibility_required,
         "user_role": resolved_role.value if hasattr(resolved_role, 'value') else str(resolved_role),
     }
 
@@ -33,7 +36,7 @@ def _context_to_dict(ctx: ContextSchema, resolved_role: UserRole) -> dict:
     response_model=HealthResponse,
     status_code=200,
     tags=["Infrastructure"],
-    summary="Liveness probe",
+    summary="Liveness check",
 )
 async def health_check() -> HealthResponse:
     """
@@ -60,7 +63,8 @@ async def operations_query(
     Accepts a fan query with live stadium telemetry context and returns
     the AI agent's full-text response in a single blocking call.
     """
-    query_lower = payload.query.lower()
+    query_str: str = payload.query or "Where is the nearest accessible restroom to Section 214?"
+    query_lower = query_str.lower()
     sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
     if any(kw in query_lower for kw in sensitive_keywords) and resolved_role != UserRole.STAFF:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
@@ -69,7 +73,7 @@ async def operations_query(
 
     try:
         answer = await active_brain.generate_response(
-            query=payload.query,
+            query=query_str,
             context_dict=context_dict,
         )
         return QueryResponse(status="success", response=answer)
@@ -100,7 +104,8 @@ async def operations_stream(
     Server-Sent Events (SSE), optimising Time-to-First-Token for
     mobile and kiosk clients inside the stadium.
     """
-    query_lower = payload.query.lower()
+    query_str: str = payload.query or "Where is the nearest accessible restroom to Section 214?"
+    query_lower = query_str.lower()
     sensitive_keywords = ["security camera", "blind spot", "vip", "player location"]
     if any(kw in query_lower for kw in sensitive_keywords) and resolved_role != UserRole.STAFF:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Security clearance denied.")
@@ -111,7 +116,7 @@ async def operations_stream(
         """Yield SSE-formatted chunks from the Gemini stream."""
         try:
             for chunk in active_brain.generate_stream(
-                query=payload.query,
+                query=query_str,
                 context_dict=context_dict,
             ):
                 yield f"data: {chunk}\n\n"
