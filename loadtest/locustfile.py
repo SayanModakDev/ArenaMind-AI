@@ -1,6 +1,8 @@
 import os
-from locust import HttpUser, task, between
+
 import requests
+from locust import HttpUser, between, task
+
 
 class ArenaMindUser(HttpUser):
     # Simulate realistic fan think-time (1-5 seconds between requests)

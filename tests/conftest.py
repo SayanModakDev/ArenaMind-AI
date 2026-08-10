@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 # Ensure required environment variables are set before any application code (like config.py) is imported

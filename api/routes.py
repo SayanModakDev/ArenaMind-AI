@@ -1,11 +1,12 @@
 import logging
-from fastapi import APIRouter, Request, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse, StreamingResponse
 
 from agents.operational_brain import OperationalBrain
-from schemas import HealthResponse, QueryRequest, QueryResponse, ContextSchema, UserRole
-from fastapi import HTTPException, status
-from dependencies import verify_api_key, limiter, require_brain
+from dependencies import limiter, require_brain, verify_api_key
+from schemas import ContextSchema, HealthResponse, QueryRequest, QueryResponse, UserRole
 
 logger = logging.getLogger("arenamind")
 
@@ -52,8 +53,8 @@ async def health_check() -> HealthResponse:
 async def operations_query(
     request: Request,
     payload: QueryRequest,
-    active_brain: OperationalBrain = Depends(require_brain),
-    resolved_role: UserRole = Depends(verify_api_key),
+    active_brain: Annotated[OperationalBrain, Depends(require_brain)],
+    resolved_role: Annotated[UserRole, Depends(verify_api_key)],
 ) -> QueryResponse:
     """
     Accepts a fan query with live stadium telemetry context and returns
@@ -74,7 +75,7 @@ async def operations_query(
         return QueryResponse(status="success", response=answer)
 
     except Exception as exc:
-        logger.exception("generate_response failed: %s", exc)
+        logger.exception("generate_response failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI generation error: {exc}",
@@ -91,8 +92,8 @@ async def operations_query(
 async def operations_stream(
     request: Request,
     payload: QueryRequest,
-    active_brain: OperationalBrain = Depends(require_brain),
-    resolved_role: UserRole = Depends(verify_api_key),
+    active_brain: Annotated[OperationalBrain, Depends(require_brain)],
+    resolved_role: Annotated[UserRole, Depends(verify_api_key)],
 ) -> StreamingResponse:
     """
     Accepts a fan query and streams the AI agent's response as
@@ -116,8 +117,8 @@ async def operations_stream(
                 yield f"data: {chunk}\n\n"
             # Signal end-of-stream to the client.
             yield "data: [DONE]\n\n"
-        except Exception as exc:
-            logger.exception("generate_stream failed: %s", exc)
+        except Exception:
+            logger.exception("generate_stream failed")
             yield "data: [ERROR] An internal server error occurred during the stream.\n\n"
 
     return StreamingResponse(

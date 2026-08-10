@@ -6,14 +6,14 @@ dependencies used by route handlers. Lives outside main.py
 to break the circular import between main ↔ api.routes.
 """
 
-from schemas import UserRole
-from fastapi import HTTPException, Security, Request, status
+from fastapi import HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from agents.operational_brain import OperationalBrain
 from config import settings
+from schemas import UserRole
 
 # ── Authentication ──────────────────────────────────────────────────────
 api_key_header = APIKeyHeader(name="X-Stadium-Auth", auto_error=False)
