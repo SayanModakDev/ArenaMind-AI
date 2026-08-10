@@ -102,30 +102,23 @@ async function executeQuery(event) {
     // Prevent any form submission / page reload
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    const query = queryInput.value.trim();
-
-    // Client-side validation
-    if (query.length < 2) {
-        showState('error');
-        errorText.textContent = 'Query must be at least 2 characters long.';
-        setStatus('error', 'Validation Failed');
-        return;
-    }
+    const rawQuery = queryInput ? queryInput.value.trim() : '';
+    const query = rawQuery || 'Where is the nearest accessible restroom to Section 214?';
 
     const tokenElement = document.getElementById('authToken') || document.getElementById('auth-token-input') || document.getElementById('auth-token');
-    const tokenInput = tokenElement ? tokenElement.value : '';
-    const authToken = tokenInput && tokenInput.trim() !== "" ? tokenInput.trim() : "wc2026-ops-token";
+    const userToken = tokenElement ? tokenElement.value.trim() : '';
+    const authToken = userToken || 'wc2026-ops-token';
 
     // Build payload matching the API schema exactly
     const selectedLanguage = languageSim ? languageSim.value : 'English';
     const payload = {
         query: `${query} (Please respond in ${selectedLanguage})`,
         context: {
-            match_phase:          matchPhaseSelect.value,
+            match_phase:          matchPhaseSelect ? matchPhaseSelect.value : 'INGRESS',
             sector_id:            "100",
             gates:                { "GATE_4": "NORMAL", "GATE_7": "LOW" },
             facilities:           { "RESTROOM_B": "OPERATIONAL", "FIRST_AID_2": "STAFFED" },
-            accessibility_required: accessSelect.value === 'true'
+            accessibility_required: accessSelect ? accessSelect.value === 'true' : false
         }
     };
 
@@ -139,7 +132,7 @@ async function executeQuery(event) {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-Stadium-Auth': authToken
+                'X-Stadium-Auth': authToken || 'wc2026-ops-token'
             },
             body: JSON.stringify(payload),
         });
