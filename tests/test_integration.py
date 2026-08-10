@@ -228,3 +228,18 @@ async def test_sse_streaming_timeout(monkeypatch):
         # Check that the error chunk was yielded
         raw_body = response.text
         assert "[ERROR] Response generation timed out" in raw_body
+
+def test_unauthenticated_query_fallback():
+    """Verify that unauthenticated HTTP requests pass without 401/422 errors and fallback to public demo mode."""
+    from unittest.mock import patch
+    
+    with patch('agents.operational_brain.OperationalBrain.generate_response') as mock_gen:
+        mock_gen.return_value = 'Mocked response'
+        response = client.post(
+            "/api/v1/operations/query",
+            json={
+                "query": "Where is the nearest restroom?",
+                "context": {}
+            }
+        )
+        assert response.status_code == 200, f"Expected 200 OK fallback, got {response.status_code}"
