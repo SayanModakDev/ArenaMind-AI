@@ -153,25 +153,47 @@ async function executeQuery(event) {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
+        let buffer = '';
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+
+            // Retain any incomplete trailing line in the buffer
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const dataStr = line.substring(6);
-                    if (dataStr === '[DONE]') {
-                        break;
-                    }
-                    if (dataStr.startsWith('[ERROR]')) {
-                        responseText.textContent += '\n\n' + dataStr;
-                        setStatus('error', 'Stream Error');
-                        break;
-                    }
+                const trimmed = line.trim();
+                if (!trimmed.startsWith('data: ')) continue;
+
+                const dataStr = trimmed.substring(6);
+                if (dataStr === '[DONE]') {
+                    break;
+                }
+                if (dataStr.startsWith('[ERROR]')) {
+                    responseText.textContent += '\n\n' + dataStr;
+                    setStatus('error', 'Stream Error');
+                    break;
+                }
+                try {
+                    const parsed = JSON.parse(dataStr);
+                    responseText.textContent += (typeof parsed === 'string' ? parsed : (parsed.text || dataStr));
+                } catch (e) {
+                    responseText.textContent += dataStr;
+                }
+            }
+        }
+
+        if (buffer.trim().startsWith('data: ')) {
+            const dataStr = buffer.trim().substring(6);
+            if (dataStr !== '[DONE]' && !dataStr.startsWith('[ERROR]')) {
+                try {
+                    const parsed = JSON.parse(dataStr);
+                    responseText.textContent += (typeof parsed === 'string' ? parsed : (parsed.text || dataStr));
+                } catch (e) {
                     responseText.textContent += dataStr;
                 }
             }

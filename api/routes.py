@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import Annotated
 
@@ -119,7 +120,10 @@ async def operations_stream(
                 query=query_str,
                 context_dict=context_dict,
             ):
-                yield f"data: {chunk}\n\n"
+                if chunk.startswith("[ERROR]"):
+                    yield f"data: {chunk}\n\n"
+                else:
+                    yield f"data: {json.dumps(chunk)}\n\n"
             # Signal end-of-stream to the client.
             yield "data: [DONE]\n\n"
         except Exception:
